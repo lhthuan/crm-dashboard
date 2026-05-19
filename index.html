@@ -478,16 +478,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             </div>
             <div style="display:flex;gap:8px">
               <button class="btn btn-primary" onclick="runSegment()">▶ Chạy phân tích</button>
-              <button class="btn btn-blue" id="btnExportSeg" style="display:none" onclick="exportSegment()">⬇ Xuất CSV</button>
+              <button class="btn btn-blue" id="btnExportSeg" style="display:none" onclick="exportSegment()">⬇ Xuất CSV toàn bộ</button>
             </div>
           </div>
         </div>
         <div class="card hidden" id="segResult">
           <div class="card-head">
             <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Kết quả segment</div>
-            <span class="card-action" id="segCount"></span>
+            <span style="font-size:12px;font-weight:600;color:var(--text2)" id="segCount"></span>
           </div>
-          <div style="overflow-x:auto" id="segTable"></div>
+          <div style="overflow-x:auto;max-height:520px" id="segTable"></div>
+          <div style="padding:12px 18px;display:flex;gap:8px;border-top:1px solid var(--border)">
+            <button class="btn btn-outline" id="btnLoadMore" style="display:none" onclick="loadMoreSegment()">⬇ Tải thêm</button>
+            <span style="font-size:11px;color:var(--text3);align-self:center">Export CSV để tải toàn bộ không giới hạn</span>
+          </div>
         </div>
       </div>
 
@@ -1100,40 +1104,67 @@ document.addEventListener('click',e=>{
 //  SEGMENT BUILDER
 // ══════════════════════════════════════════════════════════
 let segData = [];
+let segParams = {};
+let segOffset = 0;
+const SEG_LIMIT = 2000;
+
 async function runSegment(){
+  segOffset = 0;
+  segParams = {};
+  const tier = G('segTier').value; if(tier) segParams.hang_the = tier;
+  const status = G('segStatus').value; if(status) segParams.trang_thai = status;
+  const b25 = G('segBuy25').value; if(b25) segParams.mua_2025 = b25;
+  const b26 = G('segBuy26').value; if(b26) segParams.mua_2026 = b26;
+  const dstl = G('segDstl').value; if(dstl) segParams.dstl_min = dstl;
+  await loadSegmentPage(true);
+}
+
+async function loadSegmentPage(reset=false){
   showLoading('Đang lọc segment...','');
   try{
-    const params = new URLSearchParams();
-    const tier = G('segTier').value; if(tier) params.append('hang_the',tier);
-    const status = G('segStatus').value; if(status) params.append('trang_thai',status);
-    const b25 = G('segBuy25').value; if(b25) params.append('mua_2025',b25);
-    const b26 = G('segBuy26').value; if(b26) params.append('mua_2026',b26);
-    const dstl = G('segDstl').value; if(dstl) params.append('dstl_min',dstl);
-    const result = await apiFetch(`/api/segment/query?${params}&limit=500`);
-    segData = result.data;
-    G('segCount').textContent = `${fmt(result.count)} KH`;
-    G('btnExportSeg').style.display = result.count?'':'none';
+    const params = new URLSearchParams(segParams);
+    params.append('limit', SEG_LIMIT);
+    params.append('offset', segOffset);
+    const result = await apiFetch(`/api/segment/query?${params}`);
+
+    if(reset) segData = result.data;
+    else segData = [...segData, ...result.data];
+
+    const total = result.total;
+    const shown = segData.length;
+
+    G('segCount').textContent = `Hiển thị ${shown.toLocaleString('vi-VN')} / ${total.toLocaleString('vi-VN')} KH`;
+    G('btnExportSeg').style.display = total ? '' : 'none';
+    G('btnLoadMore').style.display = shown < total ? '' : 'none';
+    G('btnLoadMore').textContent = `⬇ Tải thêm (còn ${(total-shown).toLocaleString('vi-VN')} KH)`;
     G('segResult').classList.remove('hidden');
+
     const cols = ['MaKH','KhachHang','PhoneNo','HangThe','TrangThai','DSTL_2026','ChiNhanhTaoThe'];
     G('segTable').innerHTML = `
       <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr>${cols.map(c=>`<th style="background:#f8fafc;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">${c}</th>`).join('')}</tr></thead>
-        <tbody>${segData.slice(0,200).map(r=>`<tr>${cols.map(c=>`
-          <td style="padding:7px 12px;border-bottom:1px solid #f0f4f8">${r[c]!==null&&r[c]!==undefined?r[c]:'—'}</td>`).join('')}</tr>`).join('')}</tbody>
-      </table>
-      ${result.count>200?`<div style="padding:8px 14px;font-size:11px;color:var(--text3)">Hiển thị 200/${fmt(result.count)} — Xuất CSV để tải toàn bộ</div>`:''}`;
-    toast(`✓ ${fmt(result.count)} KH trong segment`);
+        <thead><tr>${cols.map(c=>`<th style="background:#f8fafc;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">${c}</th>`).join('')}</tr></thead>
+        <tbody>${segData.map(r=>`<tr>${cols.map(c=>`
+          <td style="padding:7px 12px;border-bottom:1px solid #f0f4f8;white-space:nowrap">${r[c]!=null&&r[c]!==''?r[c]:'—'}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>`;
+    toast(`✓ ${total.toLocaleString('vi-VN')} KH trong segment`);
   }catch(e){ toast('Lỗi segment: '+e.message,'err'); }
   hideLoading();
 }
 
+async function loadMoreSegment(){
+  segOffset += SEG_LIMIT;
+  await loadSegmentPage(false);
+}
+
 function exportSegment(){
-  if(!segData.length)return;
-  const cols = Object.keys(segData[0]);
-  const lines = [cols.join(','), ...segData.map(r=>cols.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(','))];
-  const blob = new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`segment_${Date.now()}.csv`;a.click();
-  toast('✅ Xuất CSV thành công');
+  if(!Object.keys(segParams).length && !segData.length){toast('Chạy segment trước','warn');return;}
+  // Gọi export endpoint — backend trả toàn bộ không giới hạn
+  const params = new URLSearchParams(segParams);
+  const url = `${API}/api/segment/export-csv?${params}&t=${encodeURIComponent(TOKEN)}`;
+  const a = document.createElement('a');
+  a.href = url; a.download = 'segment_export.csv'; a.click();
+  toast('⬇ Đang tải CSV toàn bộ...');
 }
 
 // ══════════════════════════════════════════════════════════

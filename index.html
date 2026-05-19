@@ -540,9 +540,13 @@ window.addEventListener('DOMContentLoaded', ()=>{ loadPage('overview'); });
 //  API
 // ══════════════════════════════════════════════════════════
 async function apiFetch(path, auth=true){
-  const headers = {'Content-Type':'application/json'};
-  if(auth) headers['Authorization'] = 'Bearer '+TOKEN;
-  const r = await fetch(API+path, {headers});
+  // Dung query param thay Authorization header de tranh CORS preflight
+  let url = API + path;
+  if(auth){
+    const sep = path.includes('?') ? '&' : '?';
+    url += sep + 't=' + encodeURIComponent(TOKEN);
+  }
+  const r = await fetch(url);
   if(!r.ok){
     const err = await r.json().catch(()=>({}));
     throw new Error(err.detail || `HTTP ${r.status}`);

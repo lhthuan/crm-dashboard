@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Analytics — TSCare</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --bg:#f0f4f8;--white:#fff;--sidebar:#0f1f2e;--sidebar2:#162535;
+  --border:#e2e8f2;--border2:#cdd5e0;
+  --text:#1a2535;--text2:#5a6a7e;--text3:#9aaabb;
+  --green:#16a34a;--gl:#f0fdf4;--gd:#14532d;
+  --blue:#2563eb;--bl:#eff6ff;--bd:#1d4ed8;
+  --orange:#d97706;--ol:#fffbeb;
+  --red:#dc2626;--rl:#fef2f2;
+  --purple:#7c3aed;--pl:#f5f3ff;
+  --teal:#0891b2;--tl:#ecfeff;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shm:0 4px 16px rgba(0,0,0,.08);
+  --r:12px;--font:'Be Vietnam Pro',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:14px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+.hidden{display:none!important}
+
+/* ══ LOGIN ══ */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1f2e 0%,#1a3a55 100%)}
+.login-card{background:var(--white);border-radius:20px;padding:44px 48px;width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.login-ico{width:44px;height:44px;background:linear-gradient(135deg,var(--green),#4ade80);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.login-name{font-size:18px;font-weight:800;color:var(--text)}
+.login-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.login-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block}
+.login-input{width:100%;padding:11px 14px;border:1.5px solid var(--border2);border-radius:9px;font-family:var(--font);font-size:14px;color:var(--text);outline:none;transition:all .18s;background:var(--bg)}
+.login-input:focus{border-color:var(--green);background:var(--white);box-shadow:0 0 0 3px rgba(22,163,74,.1)}
+.login-btn{width:100%;padding:12px;background:var(--green);color:white;border:none;border-radius:9px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;margin-top:14px;transition:all .2s}
+.login-btn:hover{background:var(--gd);transform:translateY(-1px)}
+.login-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none}
+
+/* ══ LAYOUT ══ */
+.app{display:flex;min-height:100vh}
+
+/* ══ SIDEBAR ══ */
+.sb{width:240px;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s}
+.sb-head{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sb-logo{display:flex;align-items:center;gap:10px}
+.sb-ico{width:36px;height:36px;background:linear-gradient(135deg,var(--green),#4ade80);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sb-title{font-size:13px;font-weight:800;color:#e2eaf4}
+.sb-ver{font-size:10px;color:#5a7a96;font-family:var(--mono)}
+.sb-nav{flex:1;overflow-y:auto;padding:10px 0}
+.sb-sec{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:rgba(90,122,150,.5);padding:12px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;color:#8aabb0}
+.nav-item:hover{background:rgba(255,255,255,.05);color:#c8dce8}
+.nav-item.active{background:rgba(22,163,74,.15);border-left-color:var(--green);color:#4ade80}
+.nav-ico{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-lbl{font-size:12px;font-weight:600}
+.nav-badge{margin-left:auto;background:rgba(22,163,74,.25);color:#4ade80;padding:1px 7px;border-radius:10px;font-size:10px;font-family:var(--mono)}
+.sb-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,.06)}
+.sb-user{display:flex;align-items:center;gap:9px}
+.sb-av{width:30px;height:30px;background:linear-gradient(135deg,var(--blue),#60a5fa);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white}
+.sb-uname{font-size:12px;font-weight:600;color:#c8dce8}
+.sb-urole{font-size:10px;color:#5a7a96}
+.logout-btn{margin-left:auto;background:none;border:none;color:#5a7a96;cursor:pointer;font-size:14px;padding:4px}
+.logout-btn:hover{color:#ff7b7b}
+
+/* ══ MAIN ══ */
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);height:52px;padding:0 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;box-shadow:var(--sh)}
+.page-title{font-size:15px;font-weight:800}
+.page-sub{font-size:12px;color:var(--text2)}
+.tb-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.refresh-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;background:var(--gl);color:var(--green);border:1px solid rgba(22,163,74,.25);border-radius:8px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
+.refresh-btn:hover{background:rgba(22,163,74,.2)}
+.last-updated{font-size:11px;color:var(--text3);font-family:var(--mono)}
+
+.content{padding:20px 24px;flex:1}
+
+/* ══ LOADING ══ */
+.loading-overlay{position:fixed;inset:0;background:rgba(15,31,46,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(4px)}
+.loading-card{background:var(--white);border-radius:16px;padding:32px 40px;text-align:center}
+.loading-spinner{width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+.loading-text{font-weight:700;font-size:15px;margin-bottom:4px}
+.loading-sub{font-size:12px;color:var(--text2);font-family:var(--mono)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══ KPI ══ */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--sh)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.green::before{background:linear-gradient(90deg,var(--green),#4ade80)}
+.kpi.blue::before{background:linear-gradient(90deg,var(--blue),#60a5fa)}
+.kpi.orange::before{background:linear-gradient(90deg,var(--orange),#fbbf24)}
+.kpi.red::before{background:linear-gradient(90deg,var(--red),#f87171)}
+.kpi.purple::before{background:linear-gradient(90deg,var(--purple),#a78bfa)}
+.kpi.teal::before{background:linear-gradient(90deg,var(--teal),#22d3ee)}
+.kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:6px}
+.kpi-val{font-size:24px;font-weight:800;font-family:var(--mono);line-height:1;margin-bottom:3px}
+.kpi-sub{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.kpi-trend{position:absolute;top:16px;right:16px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px}
+.kpi-trend.up{background:var(--gl);color:var(--green)}
+.kpi-trend.down{background:var(--rl);color:var(--red)}
+
+/* ══ CARD ══ */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:16px;overflow:hidden}
+.card-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.card-body{padding:16px 20px}
+.card-action{font-size:12px;color:var(--blue);cursor:pointer;font-weight:600}
+.card-action:hover{text-decoration:underline}
+
+/* ══ GRID ══ */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* ══ CHART CONTAINER ══ */
+.chart-wrap{position:relative;height:280px;padding:4px 0}
+.chart-wrap.tall{height:360px}
+.chart-wrap.short{height:200px}
+
+/* ══ BAR CHART (custom) ══ */
+.bar-list{padding:0 4px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px}
+.bar-lbl{width:120px;text-align:right;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.bar-track{flex:1;height:22px;background:var(--bg);border-radius:5px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding:0 8px;transition:width .6s ease}
+.bar-fill span{font-family:var(--mono);font-size:10px;color:white;font-weight:700;white-space:nowrap}
+.bar-pct{width:45px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--text2);flex-shrink:0}
+.bar-cnt{width:60px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--text3);flex-shrink:0}
+
+/* ══ RFM SEGMENT TABLE ══ */
+.seg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:4px 0}
+.seg-card{border-radius:10px;padding:14px;border:1.5px solid var(--border);background:var(--bg);transition:all .2s;cursor:default}
+.seg-card:hover{border-color:var(--green);box-shadow:var(--shm)}
+.seg-name{font-size:12px;font-weight:700;margin-bottom:8px}
+.seg-stats{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.seg-stat{background:var(--white);border-radius:6px;padding:6px 8px}
+.seg-stat-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.seg-stat-val{font-size:13px;font-weight:700;font-family:var(--mono)}
+
+/* ══ CHURN TABLE ══ */
+.pattern-table{width:100%;border-collapse:collapse}
+.pattern-table th{background:#f8fafc;padding:9px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);border-bottom:1px solid var(--border)}
+.pattern-table td{padding:10px 14px;border-bottom:1px solid #f0f4f8;font-size:13px}
+.pattern-table tr:hover td{background:#f8fffe}
+.pct-bar{display:flex;align-items:center;gap:8px}
+.pct-track{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;max-width:120px}
+.pct-fill{height:100%;border-radius:4px}
+
+/* ══ SEARCH ══ */
+.search-box{position:relative;margin-bottom:10px}
+.search-box input{width:100%;padding:10px 14px 10px 38px;border:1.5px solid var(--border2);border-radius:9px;font-family:var(--font);font-size:13px;outline:none;transition:all .18s;background:var(--bg)}
+.search-box input:focus{border-color:var(--green);background:var(--white)}
+.search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px}
+.search-results{border:1px solid var(--border2);border-radius:9px;overflow:hidden;box-shadow:var(--shm);display:none}
+.sr-item{padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background .1s}
+.sr-item:last-child{border:none}
+.sr-item:hover{background:var(--gl)}
+.sr-code{font-family:var(--mono);font-size:11px;font-weight:700;background:var(--gl);color:var(--gd);padding:2px 7px;border-radius:4px}
+
+/* ══ DETAIL PANEL ══ */
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.detail-item{background:var(--bg);border-radius:8px;padding:10px 12px}
+.detail-label{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.detail-val{font-size:13px;font-weight:600;font-family:var(--mono)}
+
+/* ══ TIER BADGE ══ */
+.tier{display:inline-block;padding:2px 9px;border-radius:5px;font-size:11px;font-weight:700}
+.tier-vvip{background:#fef3c7;color:#92400e}
+.tier-vip{background:var(--pl);color:var(--purple)}
+.tier-member{background:var(--gl);color:var(--gd)}
+
+/* ══ STATUS BADGE ══ */
+.status-active{color:var(--green);font-weight:700}
+.status-locked{color:var(--red);font-weight:700}
+
+/* ══ EMPTY STATE ══ */
+.empty{text-align:center;padding:40px;color:var(--text3)}
+.empty-ico{font-size:36px;margin-bottom:10px}
+
+/* ══ TABS ══ */
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px}
+.tab-btn{padding:9px 18px;border:none;background:none;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
+
+/* ══ FILTER ROW ══ */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filter-select{padding:7px 11px;border:1.5px solid var(--border2);border-radius:8px;font-family:var(--font);font-size:12px;color:var(--text);background:var(--white);outline:none;cursor:pointer}
+.filter-select:focus{border-color:var(--green)}
+.filter-label{font-size:12px;font-weight:600;color:var(--text2)}
+.btn{padding:7px 14px;border-radius:8px;border:none;font-family:var(--font);font-weight:700;font-size:12px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:var(--green);color:white}
+.btn-primary:hover{background:var(--gd)}
+.btn-outline{background:var(--white);color:var(--text2);border:1.5px solid var(--border2)}
+.btn-outline:hover{border-color:var(--green);color:var(--green)}
+.btn-blue{background:var(--bl);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--white);border:1px solid var(--border);border-left:3px solid var(--green);padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shm);z-index:9999;animation:slideIn .25s ease;max-width:300px}
+.toast.err{border-left-color:var(--red)}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+
+@media(max-width:900px){
+  .sb{transform:translateX(-240px)}.main{margin-left:0}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Login removed — auto-connect -->
+
+<!-- ══ LOADING ══ -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Đang tải dữ liệu...</div>
+    <div class="loading-sub" id="loadingSub">Vui lòng chờ</div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div class="app" id="appShell">
+  <!-- SIDEBAR -->
+  <aside class="sb">
+    <div class="sb-head">
+      <div class="sb-logo">
+        <div class="sb-ico">💊</div>
+        <div>
+          <div class="sb-title">CRM Analytics</div>
+          <div class="sb-ver">TSCare v1.0</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-sec">Tổng quan</div>
+      <div class="nav-item active" onclick="gotoPage('overview')">
+        <span class="nav-ico">📊</span><span class="nav-lbl">CEO Dashboard</span>
+      </div>
+      <div class="nav-item" onclick="gotoPage('revenue')">
+        <span class="nav-ico">💰</span><span class="nav-lbl">Doanh số & AOV</span>
+      </div>
+      <div class="nav-item" onclick="gotoPage('membership')">
+        <span class="nav-ico">🏅</span><span class="nav-lbl">Hạng thẻ</span>
+      </div>
+      <div class="sb-sec">Phân tích KH</div>
+      <div class="nav-item" onclick="gotoPage('rfm')">
+        <span class="nav-ico">🎯</span><span class="nav-lbl">RFM Analysis</span>
+        <span class="nav-badge">HOT</span>
+      </div>
+      <div class="nav-item" onclick="gotoPage('churn')">
+        <span class="nav-ico">⚠️</span><span class="nav-lbl">Churn & Retention</span>
+      </div>
+      <div class="nav-item" onclick="gotoPage('cohort')">
+        <span class="nav-ico">📅</span><span class="nav-lbl">Cohort Analysis</span>
+      </div>
+      <div class="sb-sec">Công cụ</div>
+      <div class="nav-item" onclick="gotoPage('search')">
+        <span class="nav-ico">🔍</span><span class="nav-lbl">Tra cứu KH</span>
+      </div>
+      <div class="nav-item" onclick="gotoPage('segment')">
+        <span class="nav-ico">✂️</span><span class="nav-lbl">Segment Builder</span>
+      </div>
+      <div class="nav-item" onclick="gotoPage('branches')">
+        <span class="nav-ico">🏪</span><span class="nav-lbl">Chi nhánh</span>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-user">
+        <div class="sb-av">T</div>
+        <div><div class="sb-uname">TSCare Team</div><div class="sb-urole">CRM Analytics</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <span style="font-size:16px" id="tbIco">📊</span>
+      <div>
+        <div class="page-title" id="tbTitle">CEO Dashboard</div>
+        <div class="page-sub" id="tbSub">Tổng quan toàn hệ thống</div>
+      </div>
+      <div class="tb-right">
+        <span class="last-updated" id="lastUpdated"></span>
+        <button class="refresh-btn" onclick="refreshCurrent()">↻ Làm mới</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- PAGE: OVERVIEW -->
+      <div id="pageOverview">
+        <div class="kpi-grid" id="kpiGrid"></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><div class="dot" style="background:var(--green)"></div>Doanh số theo tháng 2025 vs 2026</div>
+            </div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartRevenue"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Phân bổ hạng thẻ</div>
+            </div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartTier"></canvas></div></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><div class="dot" style="background:var(--orange)"></div>KH mới vs quay lại theo tháng</div>
+            </div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartNewReturn"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><div class="dot" style="background:var(--red)"></div>Hành vi KH 2025 → 2026</div>
+            </div>
+            <div class="card-body" id="churnSummaryBody"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: REVENUE -->
+      <div id="pageRevenue" class="hidden">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="dot" style="background:var(--green)"></div>Doanh số & số bill theo tháng</div>
+            <div class="filter-row" style="margin:0">
+              <select class="filter-select" id="revenueYear" onchange="loadRevenue()">
+                <option value="0">Cả 2 năm</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body"><div class="chart-wrap tall"><canvas id="chartRevDetail"></canvas></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><div class="dot" style="background:var(--blue)"></div>Phân bổ giá trị đơn hàng (AOV)</div>
+              <select class="filter-select" id="aovYear" onchange="loadAOV()">
+                <option value="2025">2025</option><option value="2026">2026</option>
+              </select>
+            </div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartAOV"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title"><div class="dot" style="background:var(--orange)"></div>Tần suất mua hàng (bills/KH)</div>
+              <select class="filter-select" id="freqYear" onchange="loadFrequency()">
+                <option value="2025">2025</option><option value="2026">2026</option>
+              </select>
+            </div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartFreq"></canvas></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: MEMBERSHIP -->
+      <div id="pageMembership" class="hidden">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><div class="dot" style="background:var(--purple)"></div>Phân bổ hạng thẻ — số KH</div></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartMemPie"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title"><div class="dot" style="background:var(--orange)"></div>Doanh số 2026 theo hạng thẻ</div></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartMemRev"></canvas></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><div class="dot" style="background:var(--blue)"></div>AOV theo hạng thẻ × năm</div></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="chartTierAOV"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- PAGE: RFM -->
+      <div id="pageRfm" class="hidden">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="dot" style="background:var(--green)"></div>RFM Segments — Phân loại khách hàng</div>
+            <span style="font-size:11px;color:var(--text2)">Dựa trên toàn bộ lịch sử giao dịch 2025–2026</span>
+          </div>
+          <div class="card-body">
+            <div class="seg-grid" id="rfmGrid"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Phân bổ RFM Segments</div>
+          </div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="chartRFM"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- PAGE: CHURN -->
+      <div id="pageChurn" class="hidden">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><div class="dot" style="background:var(--red)"></div>Hành vi KH 2025 → 2026</div></div>
+            <div class="card-body" id="churnPatternBody"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title"><div class="dot" style="background:var(--orange)"></div>Tỷ lệ active theo tháng 2026</div></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartMonthlyActive"></canvas></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: COHORT -->
+      <div id="pageCohort" class="hidden">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="dot" style="background:var(--teal)"></div>Cohort Retention Matrix</div>
+            <span style="font-size:11px;color:var(--text2)">% KH quay lại mua sau N tháng</span>
+          </div>
+          <div class="card-body" id="cohortBody" style="overflow-x:auto"></div>
+        </div>
+      </div>
+
+      <!-- PAGE: SEARCH -->
+      <div id="pageSearch" class="hidden">
+        <div class="card">
+          <div class="card-head"><div class="card-title"><div class="dot" style="background:var(--green)"></div>Tra cứu khách hàng</div></div>
+          <div class="card-body">
+            <div class="search-box">
+              <span class="search-ico">🔍</span>
+              <input type="text" id="searchInput" placeholder="Nhập mã KH, tên, hoặc số điện thoại..." oninput="onSearch()">
+            </div>
+            <div class="search-results" id="searchResults"></div>
+          </div>
+        </div>
+        <div class="card hidden" id="customerDetail">
+          <div class="card-head">
+            <div class="card-title"><div class="dot"></div><span id="detailName">Thông tin KH</span></div>
+            <button class="btn btn-outline" onclick="G('customerDetail').classList.add('hidden')" style="font-size:12px">✕ Đóng</button>
+          </div>
+          <div class="card-body" id="detailBody"></div>
+        </div>
+      </div>
+
+      <!-- PAGE: SEGMENT -->
+      <div id="pageSegment" class="hidden">
+        <div class="card">
+          <div class="card-head"><div class="card-title"><div class="dot" style="background:var(--purple)"></div>Segment Builder</div></div>
+          <div class="card-body">
+            <div class="filter-row">
+              <div class="filter-label">Hạng thẻ:</div>
+              <select class="filter-select" id="segTier">
+                <option value="">Tất cả</option>
+                <option>VVIP</option><option>VIP</option><option>Member</option>
+              </select>
+              <div class="filter-label">Trạng thái:</div>
+              <select class="filter-select" id="segStatus">
+                <option value="">Tất cả</option>
+                <option value="Hoạt Động">Hoạt động</option>
+                <option value="Khoá">Khoá</option>
+              </select>
+              <div class="filter-label">Mua 2025:</div>
+              <select class="filter-select" id="segBuy25">
+                <option value="">Không lọc</option>
+                <option value="true">Có mua</option>
+                <option value="false">Không mua</option>
+              </select>
+              <div class="filter-label">Mua 2026:</div>
+              <select class="filter-select" id="segBuy26">
+                <option value="">Không lọc</option>
+                <option value="true">Có mua</option>
+                <option value="false">Không mua</option>
+              </select>
+              <div class="filter-label">DSTL 2026 ≥</div>
+              <input type="number" class="filter-select" id="segDstl" placeholder="VD: 1000000" style="width:130px">
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary" onclick="runSegment()">▶ Chạy phân tích</button>
+              <button class="btn btn-blue" id="btnExportSeg" style="display:none" onclick="exportSegment()">⬇ Xuất CSV</button>
+            </div>
+          </div>
+        </div>
+        <div class="card hidden" id="segResult">
+          <div class="card-head">
+            <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Kết quả segment</div>
+            <span class="card-action" id="segCount"></span>
+          </div>
+          <div style="overflow-x:auto" id="segTable"></div>
+        </div>
+      </div>
+
+      <!-- PAGE: BRANCHES -->
+      <div id="pageBranches" class="hidden">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="dot" style="background:var(--orange)"></div>Hiệu suất chi nhánh</div>
+            <select class="filter-select" id="branchYear" onchange="loadBranches()">
+              <option value="0">Cả 2 năm</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+            </select>
+          </div>
+          <div class="card-body" id="branchBody"></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+let API = 'https://crm-analytics-api-shpn7.ondigitalocean.app';
+let TOKEN = 'tscare@2026!';
+let currentPage = 'overview';
+const charts = {};
+
+const PAGES = {
+  overview:   {ico:'📊', title:'CEO Dashboard',      sub:'Tổng quan toàn hệ thống'},
+  revenue:    {ico:'💰', title:'Doanh số & AOV',      sub:'Phân tích doanh thu và giá trị đơn hàng'},
+  membership: {ico:'🏅', title:'Hạng thẻ',            sub:'Phân bổ và hiệu suất từng tier'},
+  rfm:        {ico:'🎯', title:'RFM Analysis',         sub:'Phân loại khách hàng theo hành vi'},
+  churn:      {ico:'⚠️', title:'Churn & Retention',   sub:'Khách hàng rời đi và giữ chân'},
+  cohort:     {ico:'📅', title:'Cohort Analysis',      sub:'Tỷ lệ giữ chân theo tháng đăng ký'},
+  search:     {ico:'🔍', title:'Tra cứu KH',           sub:'Tìm kiếm thông tin khách hàng'},
+  segment:    {ico:'✂️', title:'Segment Builder',      sub:'Tạo danh sách KH theo điều kiện'},
+  branches:   {ico:'🏪', title:'Chi nhánh',            sub:'Hiệu suất các chi nhánh'},
+};
+
+// ══════════════════════════════════════════════════════════
+//  AUTO INIT — không cần login
+// ══════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', ()=>{ loadPage('overview'); });
+
+// ══════════════════════════════════════════════════════════
+//  API
+// ══════════════════════════════════════════════════════════
+async function apiFetch(path, auth=true){
+  const headers = {'Content-Type':'application/json'};
+  if(auth) headers['Authorization'] = 'Bearer '+TOKEN;
+  const r = await fetch(API+path, {headers});
+  if(!r.ok){
+    const err = await r.json().catch(()=>({}));
+    throw new Error(err.detail || `HTTP ${r.status}`);
+  }
+  return r.json();
+}
+
+// ══════════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════════
+function gotoPage(name){
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  event?.currentTarget?.classList.add('active');
+  // find and activate
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    if(el.getAttribute('onclick')?.includes(`'${name}'`)) el.classList.add('active');
+  });
+  loadPage(name);
+}
+
+async function loadPage(name){
+  currentPage = name;
+  const info = PAGES[name];
+  G('tbIco').textContent = info.ico;
+  G('tbTitle').textContent = info.title;
+  G('tbSub').textContent = info.sub;
+
+  // hide all pages
+  Object.keys(PAGES).forEach(p=>{
+    const el = G('page'+p.charAt(0).toUpperCase()+p.slice(1));
+    if(el) el.classList.add('hidden');
+  });
+  const el = G('page'+name.charAt(0).toUpperCase()+name.slice(1));
+  if(el) el.classList.remove('hidden');
+
+  switch(name){
+    case 'overview':   await loadOverview(); break;
+    case 'revenue':    await loadRevenue(); loadAOV(); loadFrequency(); break;
+    case 'membership': await loadMembership(); break;
+    case 'rfm':        await loadRFM(); break;
+    case 'churn':      await loadChurn(); break;
+    case 'cohort':     await loadCohort(); break;
+    case 'branches':   await loadBranches(); break;
+  }
+}
+
+function refreshCurrent(){ loadPage(currentPage); }
+
+// ══════════════════════════════════════════════════════════
+//  OVERVIEW
+// ══════════════════════════════════════════════════════════
+async function loadOverview(){
+  showLoading('Đang tải CEO Dashboard...','Đọc 3 triệu KH + giao dịch');
+  try{
+    const [kpi, rev, churn, newret] = await Promise.all([
+      apiFetch('/api/kpi/overview'),
+      apiFetch('/api/revenue/monthly'),
+      apiFetch('/api/churn/summary'),
+      apiFetch('/api/stats/new-vs-returning'),
+    ]);
+    renderKPIs(kpi);
+    renderRevenueChart(rev, 'chartRevenue', 0);
+    renderNewReturn(newret);
+    renderChurnSummary(churn, 'churnSummaryBody');
+    G('lastUpdated').textContent = '↻ ' + new Date().toLocaleTimeString('vi-VN');
+  }catch(e){ toast('Lỗi tải overview: '+e.message,'err'); }
+  hideLoading();
+}
+
+function renderKPIs(d){
+  const pct = (a,b) => b ? ((a-b)/b*100).toFixed(1)+'%' : '—';
+  const aovChange = pct(d.aov_2026, d.aov_2025);
+  const churnRate = d.kh_2025 ? (d.churned/d.kh_2025*100).toFixed(1) : 0;
+
+  G('kpiGrid').innerHTML = `
+    <div class="kpi green">
+      <div class="kpi-label">Tổng KH</div>
+      <div class="kpi-val">${fmt(d.total_kh)}</div>
+      <div class="kpi-sub">${fmt(d.active_kh)} hoạt động</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Active 90 ngày</div>
+      <div class="kpi-val">${fmt(d.active_buyers_90d)}</div>
+      <div class="kpi-sub">mua trong 90 ngày qua</div>
+    </div>
+    <div class="kpi purple">
+      <div class="kpi-label">VVIP / VIP</div>
+      <div class="kpi-val">${fmt(d.cnt_vvip)} / ${fmt(d.cnt_vip)}</div>
+      <div class="kpi-sub">${fmt(d.cnt_member)} Member</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">Doanh số 2025</div>
+      <div class="kpi-val" style="font-size:18px">${fmtVND(d.revenue_2025)}</div>
+      <div class="kpi-sub">${fmt(d.bills_2025)} bills</div>
+    </div>
+    <div class="kpi orange">
+      <div class="kpi-label">Doanh số 2026</div>
+      <div class="kpi-val" style="font-size:18px">${fmtVND(d.revenue_2026)}</div>
+      <div class="kpi-sub">${fmt(d.bills_2026)} bills</div>
+    </div>
+    <div class="kpi teal">
+      <div class="kpi-label">AOV 2026</div>
+      <div class="kpi-val" style="font-size:18px">${fmtVND(d.aov_2026)}</div>
+      <div class="kpi-sub">vs 2025: ${fmtVND(d.aov_2025)}</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-label">Churn Rate</div>
+      <div class="kpi-val">${churnRate}%</div>
+      <div class="kpi-sub">${fmt(d.churned)} KH không mua 2026</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">KH Retained</div>
+      <div class="kpi-val">${fmt(d.kh_2026_also)}</div>
+      <div class="kpi-sub">mua cả 2025 & 2026</div>
+    </div>
+  `;
+}
+
+function renderChurnSummary(data, targetId){
+  const total = data.reduce((s,r)=>s+r.customers,0);
+  const colors = {
+    'Mua đều ≥ 4 tháng':'var(--green)',
+    'Mua 3 tháng':'var(--teal)',
+    'Mua 2 tháng':'var(--blue)',
+    'Mua 1 tháng':'var(--orange)',
+    'Không mua 2026':'var(--red)',
+  };
+  G(targetId).innerHTML = `<div class="bar-list">${
+    data.map(r=>`
+      <div class="bar-row">
+        <div class="bar-lbl" title="${r.pattern}">${r.pattern}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${r.pct}%;background:${colors[r.pattern]||'var(--purple)'}">
+            <span>${r.pct}%</span>
+          </div>
+        </div>
+        <div class="bar-cnt">${fmt(r.customers)}</div>
+      </div>`).join('')
+  }</div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  REVENUE
+// ══════════════════════════════════════════════════════════
+async function loadRevenue(){
+  try{
+    const year = parseInt(G('revenueYear')?.value||0);
+    const data = await apiFetch('/api/revenue/monthly');
+    const filtered = year ? data.filter(d=>d.year===year) : data;
+    renderRevenueChart(filtered, 'chartRevDetail', year);
+  }catch(e){ toast('Lỗi revenue: '+e.message,'err'); }
+}
+
+function renderRevenueChart(data, canvasId, year=0){
+  const el = G(canvasId); if(!el)return;
+  destroyChart(canvasId);
+
+  if(year === 0){
+    // So sánh 2025 vs 2026
+    const months = [...new Set(data.map(d=>d.month))].sort();
+    const d2025 = months.map(m=>{ const r=data.find(d=>d.year===2025&&d.month===m); return r?r.revenue/1e9:null; });
+    const d2026 = months.map(m=>{ const r=data.find(d=>d.year===2026&&d.month===m); return r?r.revenue/1e9:null; });
+    const labels = months.map(m=>['','T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'][m]);
+    charts[canvasId] = new Chart(el, {
+      type:'line',
+      data:{labels,datasets:[
+        {label:'2025',data:d2025,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.08)',tension:.4,fill:true,pointRadius:4},
+        {label:'2026',data:d2026,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.08)',tension:.4,fill:true,pointRadius:4,borderDash:[]},
+      ]},
+      options:chartOpts('Tỷ VND')
+    });
+  } else {
+    const labels = data.map(d=>['','T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'][d.month]);
+    charts[canvasId] = new Chart(el, {
+      type:'bar',
+      data:{labels,datasets:[
+        {label:'Doanh số (tỷ)',data:data.map(d=>+(d.revenue/1e9).toFixed(2)),backgroundColor:'rgba(22,163,74,.7)',yAxisID:'y'},
+        {label:'Số bills',data:data.map(d=>d.bills),backgroundColor:'rgba(37,99,235,.5)',type:'line',yAxisID:'y1',tension:.4},
+      ]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        scales:{
+          y:{title:{display:true,text:'Tỷ VND'},grid:{color:'rgba(0,0,0,.04)'}},
+          y1:{position:'right',title:{display:true,text:'Bills'},grid:{display:false}},
+        },
+        plugins:{legend:{position:'top'},tooltip:{mode:'index'}}
+      }
+    });
+  }
+}
+
+async function loadAOV(){
+  try{
+    const year = G('aovYear')?.value || '2025';
+    const data = await apiFetch(`/api/aov/distribution?year=${year}`);
+    const el = G('chartAOV'); if(!el)return;
+    destroyChart('chartAOV');
+    charts['chartAOV'] = new Chart(el, {
+      type:'bar',
+      data:{
+        labels:data.map(d=>d.bucket),
+        datasets:[{label:'Số giao dịch',data:data.map(d=>d.count),
+          backgroundColor:'rgba(124,58,237,.7)',borderRadius:6}]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{y:{grid:{color:'rgba(0,0,0,.04)'}},x:{grid:{display:false}}}
+      }
+    });
+  }catch(e){}
+}
+
+async function loadFrequency(){
+  try{
+    const year = G('freqYear')?.value || '2025';
+    const data = await apiFetch(`/api/frequency/distribution?year=${year}`);
+    const el = G('chartFreq'); if(!el)return;
+    destroyChart('chartFreq');
+    charts['chartFreq'] = new Chart(el, {
+      type:'bar',
+      data:{
+        labels:data.map(d=>d.bucket),
+        datasets:[{label:'Số KH',data:data.map(d=>d.customers),
+          backgroundColor:'rgba(217,119,6,.7)',borderRadius:6}]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{y:{grid:{color:'rgba(0,0,0,.04)'}},x:{grid:{display:false}}}
+      }
+    });
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════
+//  MEMBERSHIP
+// ══════════════════════════════════════════════════════════
+async function loadMembership(){
+  showLoading('Đang tải phân tích hạng thẻ...','');
+  try{
+    const [dist, byTier] = await Promise.all([
+      apiFetch('/api/membership/distribution'),
+      apiFetch('/api/membership/revenue-by-tier'),
+    ]);
+
+    // Pie chart — số KH
+    const el1 = G('chartMemPie'); destroyChart('chartMemPie');
+    const tierColors = {'VVIP':'#f59e0b','VIP':'#7c3aed','Member':'#16a34a','null':'#94a3b8'};
+    charts['chartMemPie'] = new Chart(el1, {
+      type:'doughnut',
+      data:{labels:dist.map(d=>d.tier),datasets:[{
+        data:dist.map(d=>d.count),
+        backgroundColor:dist.map(d=>tierColors[d.tier]||'#94a3b8'),
+        borderWidth:2,borderColor:'#fff'
+      }]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)}`}}}
+      }
+    });
+
+    // Bar — doanh số 2026 theo tier
+    const el2 = G('chartMemRev'); destroyChart('chartMemRev');
+    charts['chartMemRev'] = new Chart(el2, {
+      type:'bar',
+      data:{labels:dist.map(d=>d.tier),datasets:[{
+        label:'DSTL 2026 (tỷ)',data:dist.map(d=>+(d.total_dstl_2026/1e9).toFixed(2)),
+        backgroundColor:dist.map(d=>tierColors[d.tier]||'#94a3b8'),borderRadius:8
+      }]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{y:{grid:{color:'rgba(0,0,0,.04)'}},x:{grid:{display:false}}}}
+    });
+
+    // AOV by tier × year
+    const el3 = G('chartTierAOV'); destroyChart('chartTierAOV');
+    const tiers = [...new Set(byTier.map(d=>d.tier))];
+    const years = [2025,2026];
+    charts['chartTierAOV'] = new Chart(el3, {
+      type:'bar',
+      data:{
+        labels:tiers,
+        datasets:years.map((yr,i)=>({
+          label:String(yr),
+          data:tiers.map(t=>{ const r=byTier.find(d=>d.tier===t&&d.year===yr); return r?Math.round(r.aov):null; }),
+          backgroundColor:i===0?'rgba(37,99,235,.6)':'rgba(22,163,74,.6)',borderRadius:6
+        }))
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
+        scales:{y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>fmtVND(v)}},x:{grid:{display:false}}}}
+    });
+  }catch(e){ toast('Lỗi membership: '+e.message,'err'); }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════════════════
+//  RFM
+// ══════════════════════════════════════════════════════════
+const segColors = {
+  'Champions':'#16a34a','Loyal Customers':'#2563eb','Potential Loyal':'#0891b2',
+  'New Customers':'#7c3aed','Promising':'#d97706','Need Attention':'#ea580c',
+  'At Risk':'#dc2626','Cannot Lose Them':'#991b1b','Hibernating':'#64748b',
+  'About to Sleep':'#94a3b8','Lost':'#cbd5e1'
+};
+
+async function loadRFM(){
+  showLoading('Đang tính RFM...','Phân tích toàn bộ lịch sử giao dịch');
+  try{
+    const data = await apiFetch('/api/rfm/segments');
+    G('rfmGrid').innerHTML = data.map(s=>`
+      <div class="seg-card" style="border-color:${segColors[s.segment]||'var(--border)'}20">
+        <div class="seg-name" style="color:${segColors[s.segment]||'var(--text)'}">${s.segment}</div>
+        <div class="seg-stats">
+          <div class="seg-stat">
+            <div class="seg-stat-label">KH</div>
+            <div class="seg-stat-val" style="color:var(--blue)">${fmt(s.customers)}</div>
+          </div>
+          <div class="seg-stat">
+            <div class="seg-stat-label">Avg Recency</div>
+            <div class="seg-stat-val">${Math.round(s.avg_recency_days)}d</div>
+          </div>
+          <div class="seg-stat">
+            <div class="seg-stat-label">Avg Bills</div>
+            <div class="seg-stat-val">${s.avg_frequency}</div>
+          </div>
+          <div class="seg-stat">
+            <div class="seg-stat-label">Avg Revenue</div>
+            <div class="seg-stat-val" style="color:var(--green)">${fmtVND(s.avg_monetary)}</div>
+          </div>
+        </div>
+      </div>`).join('');
+
+    // Bar chart
+    const el = G('chartRFM'); destroyChart('chartRFM');
+    charts['chartRFM'] = new Chart(el, {
+      type:'bar',
+      data:{
+        labels:data.map(d=>d.segment),
+        datasets:[{
+          label:'Số KH',data:data.map(d=>d.customers),
+          backgroundColor:data.map(d=>segColors[d.segment]||'#94a3b8'),borderRadius:6
+        }]
+      },
+      options:{
+        indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{x:{grid:{color:'rgba(0,0,0,.04)'}},y:{grid:{display:false}}}
+      }
+    });
+  }catch(e){ toast('Lỗi RFM: '+e.message,'err'); }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════════════════
+//  CHURN
+// ══════════════════════════════════════════════════════════
+async function loadChurn(){
+  showLoading('Đang phân tích churn...','');
+  try{
+    const [summary, monthly] = await Promise.all([
+      apiFetch('/api/churn/summary'),
+      apiFetch('/api/churn/monthly-pattern'),
+    ]);
+    renderChurnSummary(summary, 'churnPatternBody');
+
+    const el = G('chartMonthlyActive'); destroyChart('chartMonthlyActive');
+    const months = monthly.filter(m=>m.Month);
+    charts['chartMonthlyActive'] = new Chart(el, {
+      type:'bar',
+      data:{
+        labels:months.map(m=>['','T1','T2','T3','T4','T5'][m.Month]||'T'+m.Month),
+        datasets:[
+          {label:'KH active (%)',data:months.map(m=>m.active_rate),
+            backgroundColor:'rgba(22,163,74,.7)',borderRadius:6,yAxisID:'y'},
+          {label:'Doanh số (tỷ)',data:months.map(m=>m.total_revenue?+(m.total_revenue/1e9).toFixed(2):null),
+            type:'line',borderColor:'var(--blue)',yAxisID:'y1',tension:.4,pointRadius:5},
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
+        scales:{
+          y:{title:{display:true,text:'% KH active'},max:100,grid:{color:'rgba(0,0,0,.04)'}},
+          y1:{position:'right',title:{display:true,text:'Tỷ VND'},grid:{display:false}},
+        }
+      }
+    });
+  }catch(e){ toast('Lỗi churn: '+e.message,'err'); }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════════════════
+//  NEW VS RETURNING
+// ══════════════════════════════════════════════════════════
+function renderNewReturn(data){
+  const el = G('chartNewReturn'); if(!el)return;
+  destroyChart('chartNewReturn');
+  const labels = data.map(d=>d.year_month);
+  charts['chartNewReturn'] = new Chart(el, {
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'KH mới',data:data.map(d=>d.new_customers),backgroundColor:'rgba(22,163,74,.7)',stack:'s'},
+      {label:'KH quay lại',data:data.map(d=>d.returning_customers),backgroundColor:'rgba(37,99,235,.6)',stack:'s'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
+      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'rgba(0,0,0,.04)'}}}
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  COHORT
+// ══════════════════════════════════════════════════════════
+async function loadCohort(){
+  showLoading('Đang tính Cohort Matrix...','Có thể mất 10–20 giây');
+  try{
+    const data = await apiFetch('/api/cohort/retention');
+    // Build matrix
+    const cohorts = [...new Set(data.map(d=>d.cohort_month))].sort();
+    const maxOffset = Math.max(...data.map(d=>d.month_offset));
+    const offsets = Array.from({length:maxOffset+1},(_,i)=>i);
+
+    const getColor = pct => {
+      if(pct===null) return '#f8fafc';
+      if(pct>=70) return '#bbf7d0';
+      if(pct>=50) return '#d1fae5';
+      if(pct>=30) return '#fef9c3';
+      if(pct>=15) return '#fed7aa';
+      return '#fecaca';
+    };
+
+    const thead = `<tr><th style="background:#f8fafc;padding:8px 12px;border:1px solid var(--border);min-width:90px">Cohort</th>
+      <th style="background:#f8fafc;padding:8px 12px;border:1px solid var(--border)">Size</th>
+      ${offsets.map(o=>`<th style="background:#f8fafc;padding:8px 12px;border:1px solid var(--border);min-width:56px">M+${o}</th>`).join('')}
+    </tr>`;
+
+    const tbody = cohorts.map(c=>{
+      const row = data.filter(d=>d.cohort_month===c);
+      const size = row.find(d=>d.month_offset===0)?.cohort_size||0;
+      const cells = offsets.map(o=>{
+        const r = row.find(d=>d.month_offset===o);
+        const pct = r?.retention_pct;
+        return `<td style="background:${getColor(pct)};padding:7px 10px;border:1px solid var(--border);text-align:center;font-family:var(--mono);font-size:12px;font-weight:600">
+          ${pct!==undefined?pct+'%':''}
+        </td>`;
+      }).join('');
+      return `<tr>
+        <td style="padding:7px 12px;border:1px solid var(--border);font-weight:600;white-space:nowrap;font-size:12px">${c}</td>
+        <td style="padding:7px 12px;border:1px solid var(--border);font-family:var(--mono);font-size:12px">${fmt(size)}</td>
+        ${cells}
+      </tr>`;
+    }).join('');
+
+    G('cohortBody').innerHTML = `
+      <p style="font-size:11px;color:var(--text3);margin-bottom:10px">🟢 >70% &nbsp; 🟡 30–70% &nbsp; 🔴 <30% — màu sắc theo tỷ lệ giữ chân</p>
+      <table style="border-collapse:collapse;font-size:13px"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+  }catch(e){ toast('Lỗi cohort: '+e.message,'err'); G('cohortBody').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div>Lỗi tải dữ liệu</div>`; }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════════════════
+//  SEARCH
+// ══════════════════════════════════════════════════════════
+let searchTimer;
+function onSearch(){
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async ()=>{
+    const q = G('searchInput').value.trim();
+    const dd = G('searchResults');
+    if(q.length<2){dd.style.display='none';return;}
+    try{
+      const data = await apiFetch(`/api/customers/search?q=${encodeURIComponent(q)}&limit=12`);
+      if(!data.length){dd.innerHTML='<div style="padding:12px;color:var(--text3);font-style:italic">Không tìm thấy</div>';dd.style.display='block';return;}
+      dd.innerHTML = data.map(d=>`
+        <div class="sr-item" onclick="loadCustomerDetail('${d.MaKH}')">
+          <span class="sr-code">${d.MaKH}</span>
+          <span style="flex:1">${d.KhachHang||'—'}</span>
+          <span class="tier tier-${(d.HangThe||'').toLowerCase()}">${d.HangThe||'—'}</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">${d.PhoneNo||''}</span>
+        </div>`).join('');
+      dd.style.display='block';
+    }catch(e){}
+  }, 350);
+}
+
+async function loadCustomerDetail(makh){
+  G('searchResults').style.display='none';
+  showLoading('Đang tải hồ sơ KH...','');
+  try{
+    const d = await apiFetch(`/api/customers/detail/${makh}`);
+    G('detailName').textContent = d.info.KhachHang || makh;
+    G('customerDetail').classList.remove('hidden');
+
+    const stats2025 = d.stats.find(s=>s.year==2025)||{};
+    const stats2026 = d.stats.find(s=>s.year==2026)||{};
+
+    G('detailBody').innerHTML = `
+      <div class="detail-grid" style="margin-bottom:14px">
+        <div class="detail-item"><div class="detail-label">Mã KH</div><div class="detail-val">${d.info.MaKH}</div></div>
+        <div class="detail-item"><div class="detail-label">Hạng thẻ</div><div class="detail-val"><span class="tier tier-${(d.info.HangThe||'').toLowerCase()}">${d.info.HangThe||'—'}</span></div></div>
+        <div class="detail-item"><div class="detail-label">Trạng thái</div><div class="detail-val"><span class="${d.info.TrangThai==='Hoạt Động'?'status-active':'status-locked'}">${d.info.TrangThai||'—'}</span></div></div>
+        <div class="detail-item"><div class="detail-label">SĐT</div><div class="detail-val">${d.info.PhoneNo||'—'}</div></div>
+        <div class="detail-item"><div class="detail-label">Chi nhánh tạo thẻ</div><div class="detail-val">${d.info.ChiNhanhTaoThe||'—'}</div></div>
+        <div class="detail-item"><div class="detail-label">Mua nhiều nhất tại</div><div class="detail-val">${d.info.ChiNhanhMuaNhieuNhat||'—'}</div></div>
+        <div class="detail-item"><div class="detail-label">DSTL 2026</div><div class="detail-val" style="color:var(--green)">${fmtVND(d.info.DSTL_2026)}</div></div>
+        <div class="detail-item"><div class="detail-label">Ngày tạo thẻ</div><div class="detail-val">${d.info.NgayTaoThe?.substring(0,10)||'—'}</div></div>
+      </div>
+      <div class="grid-2" style="margin-bottom:14px">
+        <div style="background:var(--bl);border-radius:10px;padding:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:8px">📦 NĂM 2025</div>
+          <div style="display:flex;gap:16px;font-family:var(--mono)">
+            <div><div style="font-size:10px;color:var(--text2)">Bills</div><div style="font-size:18px;font-weight:700">${fmt(stats2025.bills||0)}</div></div>
+            <div><div style="font-size:10px;color:var(--text2)">Doanh số</div><div style="font-size:18px;font-weight:700">${fmtVND(stats2025.revenue||0)}</div></div>
+            <div><div style="font-size:10px;color:var(--text2)">AOV</div><div style="font-size:18px;font-weight:700">${fmtVND(stats2025.aov||0)}</div></div>
+          </div>
+        </div>
+        <div style="background:var(--gl);border-radius:10px;padding:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px">📦 NĂM 2026</div>
+          <div style="display:flex;gap:16px;font-family:var(--mono)">
+            <div><div style="font-size:10px;color:var(--text2)">Bills</div><div style="font-size:18px;font-weight:700">${fmt(stats2026.bills||0)}</div></div>
+            <div><div style="font-size:10px;color:var(--text2)">Doanh số</div><div style="font-size:18px;font-weight:700">${fmtVND(stats2026.revenue||0)}</div></div>
+            <div><div style="font-size:10px;color:var(--text2)">AOV</div><div style="font-size:18px;font-weight:700">${fmtVND(stats2026.aov||0)}</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px">20 giao dịch gần nhất</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr>
+            <th style="background:#f8fafc;padding:7px 12px;border-bottom:1px solid var(--border);text-align:left">Thời gian</th>
+            <th style="background:#f8fafc;padding:7px 12px;border-bottom:1px solid var(--border);text-align:left">Số HĐ</th>
+            <th style="background:#f8fafc;padding:7px 12px;border-bottom:1px solid var(--border);text-align:left">Chi nhánh</th>
+            <th style="background:#f8fafc;padding:7px 12px;border-bottom:1px solid var(--border);text-align:right">Giá trị</th>
+          </tr></thead>
+          <tbody>${(d.recent_transactions||[]).map(tx=>`
+            <tr>
+              <td style="padding:6px 12px;border-bottom:1px solid #f0f4f8;font-family:var(--mono);color:var(--text2)">${tx.EventTime?.substring(0,16)||'—'}</td>
+              <td style="padding:6px 12px;border-bottom:1px solid #f0f4f8;font-family:var(--mono)">${tx.Document_No}</td>
+              <td style="padding:6px 12px;border-bottom:1px solid #f0f4f8">${tx.Store_Name||tx.Store_No}</td>
+              <td style="padding:6px 12px;border-bottom:1px solid #f0f4f8;text-align:right;font-weight:700;color:var(--green);font-family:var(--mono)">${fmtVND(tx.Total_Amount)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }catch(e){ toast('Lỗi tải KH: '+e.message,'err'); }
+  hideLoading();
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#searchInput')&&!e.target.closest('#searchResults'))
+    G('searchResults').style.display='none';
+});
+
+// ══════════════════════════════════════════════════════════
+//  SEGMENT BUILDER
+// ══════════════════════════════════════════════════════════
+let segData = [];
+async function runSegment(){
+  showLoading('Đang lọc segment...','');
+  try{
+    const params = new URLSearchParams();
+    const tier = G('segTier').value; if(tier) params.append('hang_the',tier);
+    const status = G('segStatus').value; if(status) params.append('trang_thai',status);
+    const b25 = G('segBuy25').value; if(b25) params.append('mua_2025',b25);
+    const b26 = G('segBuy26').value; if(b26) params.append('mua_2026',b26);
+    const dstl = G('segDstl').value; if(dstl) params.append('dstl_min',dstl);
+    const result = await apiFetch(`/api/segment/query?${params}&limit=500`);
+    segData = result.data;
+    G('segCount').textContent = `${fmt(result.count)} KH`;
+    G('btnExportSeg').style.display = result.count?'':'none';
+    G('segResult').classList.remove('hidden');
+    const cols = ['MaKH','KhachHang','PhoneNo','HangThe','TrangThai','DSTL_2026','ChiNhanhTaoThe'];
+    G('segTable').innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr>${cols.map(c=>`<th style="background:#f8fafc;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">${c}</th>`).join('')}</tr></thead>
+        <tbody>${segData.slice(0,200).map(r=>`<tr>${cols.map(c=>`
+          <td style="padding:7px 12px;border-bottom:1px solid #f0f4f8">${r[c]!==null&&r[c]!==undefined?r[c]:'—'}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>
+      ${result.count>200?`<div style="padding:8px 14px;font-size:11px;color:var(--text3)">Hiển thị 200/${fmt(result.count)} — Xuất CSV để tải toàn bộ</div>`:''}`;
+    toast(`✓ ${fmt(result.count)} KH trong segment`);
+  }catch(e){ toast('Lỗi segment: '+e.message,'err'); }
+  hideLoading();
+}
+
+function exportSegment(){
+  if(!segData.length)return;
+  const cols = Object.keys(segData[0]);
+  const lines = [cols.join(','), ...segData.map(r=>cols.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(','))];
+  const blob = new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`segment_${Date.now()}.csv`;a.click();
+  toast('✅ Xuất CSV thành công');
+}
+
+// ══════════════════════════════════════════════════════════
+//  BRANCHES
+// ══════════════════════════════════════════════════════════
+async function loadBranches(){
+  showLoading('Đang tải dữ liệu chi nhánh...','');
+  try{
+    const year = G('branchYear')?.value||0;
+    const data = await apiFetch(`/api/revenue/by-store?year=${year}&top_n=30`);
+    const max = Math.max(...data.map(d=>d.revenue),1);
+    G('branchBody').innerHTML = `<div class="bar-list">${
+      data.map((r,i)=>`
+        <div class="bar-row">
+          <div class="bar-lbl" title="${r.Store_Name||r.Store_No}">${r.Store_Name||r.Store_No}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${(r.revenue/max*100).toFixed(1)}%;background:linear-gradient(90deg,var(--orange),#fbbf24)">
+              <span>${fmtVND(r.revenue)}</span>
+            </div>
+          </div>
+          <div class="bar-pct" style="width:80px;font-size:11px">${fmt(r.customers)} KH</div>
+        </div>`).join('')
+    }</div>`;
+  }catch(e){ toast('Lỗi branches: '+e.message,'err'); }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════
+function G(id){return document.getElementById(id)}
+function fmt(n){return n!=null?Number(n).toLocaleString('vi-VN'):'—'}
+function fmtVND(n){
+  if(n==null)return'—';
+  n=Number(n);
+  if(n>=1e9) return (n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return (n/1e6).toFixed(1)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(0)+'K';
+  return n.toFixed(0);
+}
+function chartOpts(yLabel=''){
+  return {responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top'},tooltip:{mode:'index',intersect:false}},
+    scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'},title:{display:!!yLabel,text:yLabel}}}
+  };
+}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function showLoading(text,sub){G('loadingText').textContent=text;G('loadingSub').textContent=sub;G('loadingOverlay').classList.remove('hidden')}
+function hideLoading(){G('loadingOverlay').classList.add('hidden')}
+let _tt;
+function toast(msg,type=''){
+  document.querySelector('.toast')?.remove();
+  const el=document.createElement('div');el.className='toast'+(type?' '+type:'');el.textContent=msg;
+  document.body.appendChild(el);clearTimeout(_tt);_tt=setTimeout(()=>el?.remove(),3500);
+}
+</script>
+</body>
+</html>

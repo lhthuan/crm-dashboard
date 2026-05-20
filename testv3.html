@@ -433,101 +433,117 @@ const API   = 'https://crm-analytics-api-shpn7.ondigitalocean.app';
 const TOKEN = 'tscare@2026!';
 
 // ══════════════════════════════════════════════════════════
+//  DEBUG CONSOLE — hiện log realtime góc phải
+// ══════════════════════════════════════════════════════════
+const DBG = {
+  el: null,
+  lines: [],
+  init(){
+    this.el = document.createElement('div');
+    this.el.id = 'dbgConsole';
+    this.el.style.cssText = `
+      position:fixed;bottom:0;right:0;width:400px;max-height:220px;
+      background:#0a0f1a;border:1px solid #1e3a5f;border-radius:10px 0 0 0;
+      font-family:monospace;font-size:11px;overflow-y:auto;z-index:8888;
+      padding:8px 10px;display:none;
+    `;
+    document.body.appendChild(this.el);
+    // Toggle button
+    const btn = document.createElement('button');
+    btn.id = 'dbgToggle';
+    btn.textContent = '🐛 Log';
+    btn.style.cssText = `
+      position:fixed;bottom:8px;right:8px;z-index:8889;
+      padding:4px 10px;background:#1e3a5f;color:#60a5fa;border:none;
+      border-radius:6px;font-size:11px;font-family:monospace;cursor:pointer;
+    `;
+    btn.onclick = () => {
+      this.el.style.display = this.el.style.display==='none'?'block':'none';
+      btn.style.bottom = this.el.style.display==='block'?'228px':'8px';
+    };
+    document.body.appendChild(btn);
+  },
+  log(msg, type='info'){
+    const colors={info:'#60a5fa',ok:'#4ade80',err:'#f87171',warn:'#fbbf24',dim:'#475569'};
+    const ts = new Date().toLocaleTimeString('vi-VN');
+    const line = `<div style="color:${colors[type]||colors.info};margin-bottom:2px;line-height:1.5">[${ts}] ${msg}</div>`;
+    this.lines.push(line);
+    if(this.lines.length > 200) this.lines.shift();
+    if(this.el) { this.el.innerHTML = this.lines.join(''); this.el.scrollTop = 9999; }
+    console.log(`[CRM ${type}] ${msg}`);
+  },
+  ok(msg){this.log('✓ '+msg,'ok')},
+  err(msg){this.log('✗ '+msg,'err')},
+  warn(msg){this.log('⚠ '+msg,'warn')},
+  time(msg){this.log('⏱ '+msg,'dim')},
+};
+
+// ══════════════════════════════════════════════════════════
 //  TRANSLATIONS
 // ══════════════════════════════════════════════════════════
 const I18N = {
-  vi: {
-    nav_overview:'Tổng quan', nav_analysis:'Phân tích KH', nav_tools:'Công cụ',
-    pg_overview:'CEO Dashboard', pg_revenue:'Doanh số & AOV', pg_membership:'Hạng thẻ',
-    pg_rfm:'RFM Analysis', pg_churn:'Churn & Retention', pg_cohort:'Cohort Analysis',
-    pg_search:'Tra cứu KH', pg_segment:'Segment Builder', pg_branches:'Chi nhánh',
-    btn_refresh:'Làm mới', btn_run:'Tính', btn_filter:'Lọc', btn_reset:'Reset',
-    btn_export_csv:'Xuất CSV toàn bộ', btn_load_more:'Tải thêm',
-    lbl_tier:'Hạng thẻ:', lbl_status:'Trạng thái:', lbl_branch:'Chi nhánh:',
-    lbl_keyword:'Từ khoá:', lbl_year:'Năm:', lbl_month:'Tháng:',
-    lbl_date_from:'Từ ngày:', lbl_date_to:'Đến ngày:',
-    lbl_bought_2025:'Mua 2025:', lbl_bought_2026:'Mua 2026:',
-    tab_churn_all:'Tổng hợp', tab_churn_tier:'Theo hạng thẻ', tab_churn_active:'Active theo tháng',
-    tab_search_quick:'Tra cứu nhanh', tab_search_filter:'Lọc nâng cao',
-    chart_revenue_monthly:'Doanh số theo tháng 2025 vs 2026', chart_tier_dist:'Phân bổ hạng thẻ',
-    chart_new_ret:'KH mới vs quay lại', chart_churn_summary:'Hành vi KH 2025→2026',
-    chart_revenue_trend:'Doanh số theo tháng', chart_aov_dist:'Phân bổ AOV', chart_freq:'Tần suất mua',
-    chart_tier_count:'Số KH theo hạng thẻ', chart_tier_rev:'DSTL 2026 theo hạng thẻ', chart_tier_aov:'AOV × Hạng thẻ × Năm',
-    chart_rfm_dist:'Phân bổ RFM Segments', chart_churn_pattern:'Pattern 2025→2026',
-    chart_monthly_active_rate:'% KH active theo tháng 2026', chart_churn_by_tier:'Pattern 2026 theo hạng thẻ',
-    chart_active_by_tier:'Active theo tháng × hạng thẻ', cohort_subtitle:'% KH quay lại sau N tháng',
-    search_by_name_phone:'Tìm theo mã KH / tên / SĐT', advanced_filter:'Bộ lọc điều kiện',
-    filter_results:'Kết quả lọc', branch_performance:'Hiệu suất chi nhánh — chia theo hạng thẻ',
-    branch_table:'Chi tiết chi nhánh',
-    opt_all_years:'Cả 2 năm', opt_all_months:'Tất cả tháng',
-    kpi_total:'Tổng KH', kpi_active:'Active 90 ngày', kpi_tier:'VVIP / VIP',
-    kpi_rev25:'Doanh số 2025', kpi_rev26:'Doanh số 2026', kpi_aov:'AOV 2026',
-    kpi_churn:'Churn Rate', kpi_retained:'KH Retained',
+  vi:{
+    nav_overview:'Tổng quan',nav_analysis:'Phân tích KH',nav_tools:'Công cụ',
+    pg_overview:'CEO Dashboard',pg_revenue:'Doanh số & AOV',pg_membership:'Hạng thẻ',
+    pg_rfm:'RFM Analysis',pg_churn:'Churn & Retention',pg_cohort:'Cohort Analysis',
+    pg_search:'Tra cứu KH',pg_segment:'Segment Builder',pg_branches:'Chi nhánh',
+    kpi_total:'Tổng KH',kpi_active:'Active 90 ngày',kpi_tier:'VVIP / VIP',
+    kpi_rev25:'Doanh số 2025',kpi_rev26:'Doanh số 2026',kpi_aov:'AOV 2026',
+    kpi_churn:'Churn Rate',kpi_retained:'KH Retained',
+    tab_churn_all:'Tổng hợp',tab_churn_tier:'Theo hạng thẻ',tab_churn_active:'Active theo tháng',
+    tab_search_quick:'Tra cứu nhanh',tab_search_filter:'Lọc nâng cao',
+    lbl_tier:'Hạng thẻ:',lbl_status:'Trạng thái:',lbl_branch:'Chi nhánh:',
+    lbl_keyword:'Từ khoá:',lbl_year:'Năm:',lbl_month:'Tháng:',
+    lbl_date_from:'Từ ngày:',lbl_date_to:'Đến ngày:',
+    lbl_bought_2025:'Mua 2025:',lbl_bought_2026:'Mua 2026:',
+    btn_refresh:'Làm mới',btn_run:'Chạy',btn_filter:'Lọc',btn_reset:'Reset',
+    btn_export_csv:'Xuất CSV',btn_load_more:'Tải thêm',
+    filter_results:'Kết quả lọc',
   },
-  en: {
-    nav_overview:'Overview', nav_analysis:'Customer Analysis', nav_tools:'Tools',
-    pg_overview:'CEO Dashboard', pg_revenue:'Revenue & AOV', pg_membership:'Membership',
-    pg_rfm:'RFM Analysis', pg_churn:'Churn & Retention', pg_cohort:'Cohort Analysis',
-    pg_search:'Customer Lookup', pg_segment:'Segment Builder', pg_branches:'Branches',
-    btn_refresh:'Refresh', btn_run:'Run', btn_filter:'Filter', btn_reset:'Reset',
-    btn_export_csv:'Export All CSV', btn_load_more:'Load More',
-    lbl_tier:'Tier:', lbl_status:'Status:', lbl_branch:'Branch:',
-    lbl_keyword:'Keyword:', lbl_year:'Year:', lbl_month:'Month:',
-    lbl_date_from:'From:', lbl_date_to:'To:',
-    lbl_bought_2025:'Bought 2025:', lbl_bought_2026:'Bought 2026:',
-    tab_churn_all:'All', tab_churn_tier:'By Tier', tab_churn_active:'Active by Month',
-    tab_search_quick:'Quick Search', tab_search_filter:'Advanced Filter',
-    chart_revenue_monthly:'Monthly Revenue 2025 vs 2026', chart_tier_dist:'Membership Distribution',
-    chart_new_ret:'New vs Returning Customers', chart_churn_summary:'Customer Behavior 2025→2026',
-    chart_revenue_trend:'Monthly Revenue', chart_aov_dist:'AOV Distribution', chart_freq:'Purchase Frequency',
-    chart_tier_count:'Customers by Tier', chart_tier_rev:'2026 Revenue by Tier', chart_tier_aov:'AOV × Tier × Year',
-    chart_rfm_dist:'RFM Segment Distribution', chart_churn_pattern:'2025→2026 Purchase Pattern',
-    chart_monthly_active_rate:'Active Rate by Month 2026', chart_churn_by_tier:'2026 Pattern by Tier',
-    chart_active_by_tier:'Active Rate by Month × Tier', cohort_subtitle:'% returning after N months',
-    search_by_name_phone:'Search by ID / Name / Phone', advanced_filter:'Filter Conditions',
-    filter_results:'Filter Results', branch_performance:'Branch Performance — by Tier',
-    branch_table:'Branch Detail',
-    opt_all_years:'All Years', opt_all_months:'All Months',
-    kpi_total:'Total Customers', kpi_active:'Active 90d', kpi_tier:'VVIP / VIP',
-    kpi_rev25:'Revenue 2025', kpi_rev26:'Revenue 2026', kpi_aov:'AOV 2026',
-    kpi_churn:'Churn Rate', kpi_retained:'Retained',
+  en:{
+    nav_overview:'Overview',nav_analysis:'Customer Analysis',nav_tools:'Tools',
+    pg_overview:'CEO Dashboard',pg_revenue:'Revenue & AOV',pg_membership:'Membership',
+    pg_rfm:'RFM Analysis',pg_churn:'Churn & Retention',pg_cohort:'Cohort Analysis',
+    pg_search:'Customer Lookup',pg_segment:'Segment Builder',pg_branches:'Branches',
+    kpi_total:'Total Customers',kpi_active:'Active 90d',kpi_tier:'VVIP / VIP',
+    kpi_rev25:'Revenue 2025',kpi_rev26:'Revenue 2026',kpi_aov:'AOV 2026',
+    kpi_churn:'Churn Rate',kpi_retained:'Retained',
+    tab_churn_all:'All',tab_churn_tier:'By Tier',tab_churn_active:'Active by Month',
+    tab_search_quick:'Quick Search',tab_search_filter:'Advanced Filter',
+    lbl_tier:'Tier:',lbl_status:'Status:',lbl_branch:'Branch:',
+    lbl_keyword:'Keyword:',lbl_year:'Year:',lbl_month:'Month:',
+    lbl_date_from:'From:',lbl_date_to:'To:',
+    lbl_bought_2025:'Bought 2025:',lbl_bought_2026:'Bought 2026:',
+    btn_refresh:'Refresh',btn_run:'Run',btn_filter:'Filter',btn_reset:'Reset',
+    btn_export_csv:'Export CSV',btn_load_more:'Load More',
+    filter_results:'Filter Results',
   },
-  ko: {
-    nav_overview:'개요', nav_analysis:'고객 분석', nav_tools:'도구',
-    pg_overview:'CEO 대시보드', pg_revenue:'매출 & AOV', pg_membership:'회원 등급',
-    pg_rfm:'RFM 분석', pg_churn:'이탈 & 유지', pg_cohort:'코호트 분석',
-    pg_search:'고객 조회', pg_segment:'세그먼트 빌더', pg_branches:'지점',
-    btn_refresh:'새로 고침', btn_run:'실행', btn_filter:'필터', btn_reset:'초기화',
-    btn_export_csv:'전체 CSV 내보내기', btn_load_more:'더 불러오기',
-    lbl_tier:'등급:', lbl_status:'상태:', lbl_branch:'지점:',
-    lbl_keyword:'키워드:', lbl_year:'연도:', lbl_month:'월:',
-    lbl_date_from:'시작일:', lbl_date_to:'종료일:',
-    lbl_bought_2025:'2025년 구매:', lbl_bought_2026:'2026년 구매:',
-    tab_churn_all:'전체', tab_churn_tier:'등급별', tab_churn_active:'월별 활성',
-    tab_search_quick:'빠른 검색', tab_search_filter:'고급 필터',
-    chart_revenue_monthly:'월별 매출 2025 vs 2026', chart_tier_dist:'등급별 분포',
-    chart_new_ret:'신규 vs 재구매', chart_churn_summary:'2025→2026 구매 행동',
-    chart_revenue_trend:'월별 매출', chart_aov_dist:'AOV 분포', chart_freq:'구매 빈도',
-    chart_tier_count:'등급별 고객 수', chart_tier_rev:'2026 등급별 매출', chart_tier_aov:'AOV × 등급 × 연도',
-    chart_rfm_dist:'RFM 세그먼트 분포', chart_churn_pattern:'2025→2026 구매 패턴',
-    chart_monthly_active_rate:'2026 월별 활성률', chart_churn_by_tier:'등급별 2026 패턴',
-    chart_active_by_tier:'월별 × 등급 활성률', cohort_subtitle:'N개월 후 재구매 비율',
-    search_by_name_phone:'코드 / 이름 / 전화 검색', advanced_filter:'필터 조건',
-    filter_results:'필터 결과', branch_performance:'지점 실적 — 등급별',
-    branch_table:'지점 상세',
-    opt_all_years:'전체 연도', opt_all_months:'전체 월',
-    kpi_total:'전체 고객', kpi_active:'90일 활성', kpi_tier:'VVIP / VIP',
-    kpi_rev25:'2025 매출', kpi_rev26:'2026 매출', kpi_aov:'2026 AOV',
-    kpi_churn:'이탈률', kpi_retained:'유지 고객',
-  }
+  ko:{
+    nav_overview:'개요',nav_analysis:'고객 분석',nav_tools:'도구',
+    pg_overview:'CEO 대시보드',pg_revenue:'매출 & AOV',pg_membership:'회원 등급',
+    pg_rfm:'RFM 분석',pg_churn:'이탈 & 유지',pg_cohort:'코호트 분석',
+    pg_search:'고객 조회',pg_segment:'세그먼트',pg_branches:'지점',
+    kpi_total:'전체 고객',kpi_active:'90일 활성',kpi_tier:'VVIP / VIP',
+    kpi_rev25:'2025 매출',kpi_rev26:'2026 매출',kpi_aov:'2026 AOV',
+    kpi_churn:'이탈률',kpi_retained:'유지 고객',
+    tab_churn_all:'전체',tab_churn_tier:'등급별',tab_churn_active:'월별 활성',
+    tab_search_quick:'빠른 검색',tab_search_filter:'고급 필터',
+    lbl_tier:'등급:',lbl_status:'상태:',lbl_branch:'지점:',
+    lbl_keyword:'키워드:',lbl_year:'연도:',lbl_month:'월:',
+    lbl_date_from:'시작일:',lbl_date_to:'종료일:',
+    lbl_bought_2025:'2025 구매:',lbl_bought_2026:'2026 구매:',
+    btn_refresh:'새로 고침',btn_run:'실행',btn_filter:'필터',btn_reset:'초기화',
+    btn_export_csv:'CSV 내보내기',btn_load_more:'더 불러오기',
+    filter_results:'필터 결과',
+  },
 };
-let LANG = 'vi';
-function T(key){ return I18N[LANG][key] || I18N['vi'][key] || key; }
+let LANG='vi';
+function T(k){return I18N[LANG]?.[k]||I18N.vi[k]||k;}
 function setLang(lang){
-  LANG = lang;
-  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on', b.textContent.trim().toLowerCase()===lang||b.textContent.trim()==='한'&&lang==='ko'));
-  document.querySelectorAll('[data-i]').forEach(el=>{ const v=T(el.dataset.i); if(v) el.textContent=v; });
-  refreshPage();
+  LANG=lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on',
+    b.textContent.trim()===(lang==='ko'?'한':lang.toUpperCase())));
+  document.querySelectorAll('[data-i]').forEach(el=>{const v=T(el.dataset.i);if(v)el.textContent=v;});
 }
 
 // ══════════════════════════════════════════════════════════
@@ -538,35 +554,79 @@ const CH={};
 let segData=[], segParams={}, segOffset=0;
 let filterData=[], filterParams={}, filterOffset=0;
 const SEG_LIMIT=2000;
-let sortSt={col:null,dir:'asc'};
 
 // ══════════════════════════════════════════════════════════
-//  API
+//  API FETCH — với timeout tùy chỉnh
 // ══════════════════════════════════════════════════════════
-async function api(path, timeoutMs=20000){
-  const sep=path.includes('?')?'&':'?';
-  const url=API+path+sep+'t='+encodeURIComponent(TOKEN);
-  const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(), timeoutMs);
+async function api(path, ms=20000){
+  const sep = path.includes('?')?'&':'?';
+  const url  = API + path + sep + 't=' + encodeURIComponent(TOKEN);
+  const ctrl = new AbortController();
+  const t0   = Date.now();
+  const timer= setTimeout(()=>ctrl.abort(), ms);
+  DBG.log(`→ ${path.split('?')[0]} (max ${ms/1000}s)`,'dim');
   try{
-    const r=await fetch(url,{signal:ctrl.signal});
+    const r = await fetch(url, {signal:ctrl.signal});
     clearTimeout(timer);
+    const elapsed = ((Date.now()-t0)/1000).toFixed(1);
     if(!r.ok){
       let m=`HTTP ${r.status}`;
       try{const j=await r.json();m=j.detail||m;}catch(e){}
+      DBG.err(`${path.split('?')[0]} → ${m} (${elapsed}s)`);
       throw new Error(m);
     }
-    return await r.json();
+    const data = await r.json();
+    DBG.ok(`${path.split('?')[0]} ← ${elapsed}s`);
+    return data;
   }catch(e){
     clearTimeout(timer);
-    if(e.name==='AbortError') throw new Error(`Timeout ${timeoutMs/1000}s — query nặng, thử lại`);
-    throw e;
+    const elapsed = ((Date.now()-t0)/1000).toFixed(1);
+    const msg = e.name==='AbortError'
+      ? `Timeout ${ms/1000}s — query nặng, thử lại`
+      : e.message;
+    DBG.err(`${path.split('?')[0]} FAIL: ${msg} (${elapsed}s)`);
+    throw new Error(msg);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  CACHE BAR
+// ══════════════════════════════════════════════════════════
+function showOv(t){ G('cacheTxt').textContent='⏳ '+t; }
+function hideOv(){ pollCache(); }
+
+async function pollCache(){
+  try{
+    const ctrl=new AbortController();
+    setTimeout(()=>ctrl.abort(), 5000);
+    const r=await fetch(API+'/api/cache/status',{signal:ctrl.signal}).then(r=>r.json());
+    const bar=G('cacheBar'), txt=G('cacheTxt');
+    if(r.ready){
+      bar.className='cache-bar';
+      txt.textContent=`✓ Cache sẵn sàng — ${r.keys_cached?.length||0} datasets`;
+      DBG.ok('Cache ready: '+r.keys_cached?.length+' keys');
+    }else{
+      bar.className='cache-bar bld';
+      txt.textContent=`⏳ Cache building (${r.keys_cached?.length||0}/16)...`;
+    }
+  }catch(e){
+    G('cacheBar').className='cache-bar bld';
+    G('cacheTxt').textContent='⚠ API offline: '+e.message;
+    DBG.err('pollCache: '+e.message);
   }
 }
 
 // ══════════════════════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════════════════════
+const PAGE_META={
+  overview: ['📊','pg_overview'],revenue:  ['💰','pg_revenue'],
+  membership:['🏅','pg_membership'],rfm:   ['🎯','pg_rfm'],
+  churn:    ['⚠️','pg_churn'],cohort:      ['📅','pg_cohort'],
+  search:   ['🔍','pg_search'],segment:    ['✂️','pg_segment'],
+  branches: ['🏪','pg_branches'],
+};
+
 document.querySelectorAll('.ni').forEach(el=>{
   el.addEventListener('click',()=>{
     document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
@@ -575,182 +635,186 @@ document.querySelectorAll('.ni').forEach(el=>{
   });
 });
 
-const PAGE_META={
-  overview:['📊','pg_overview','Tổng quan toàn hệ thống'],
-  revenue: ['💰','pg_revenue','Phân tích doanh thu và AOV'],
-  membership:['🏅','pg_membership','Phân bổ và hiệu suất từng tier'],
-  rfm:     ['🎯','pg_rfm','Phân loại KH theo hành vi mua'],
-  churn:   ['⚠️','pg_churn','KH rời đi và giữ chân'],
-  cohort:  ['📅','pg_cohort','Tỷ lệ giữ chân theo thời gian'],
-  search:  ['🔍','pg_search','Tìm kiếm thông tin khách hàng'],
-  segment: ['✂️','pg_segment','Tạo danh sách KH theo điều kiện'],
-  branches:['🏪','pg_branches','Hiệu suất các chi nhánh'],
-};
-
 function refreshPage(){ DATA[curPage]=null; loadPage(curPage); }
 
-async function loadPage(name){
+function loadPage(name){
+  DBG.log(`--- Chuyển trang: ${name} ---`,'info');
   curPage=name;
-  const [ico,titleKey]=PAGE_META[name]||['📊','pg_overview'];
+  const[ico,key]=PAGE_META[name]||['📊','pg_overview'];
   G('tbIco').textContent=ico;
-  G('tbTtl').textContent=T(titleKey);
+  G('tbTtl').textContent=T(key);
   Object.keys(PAGE_META).forEach(p=>{
     G('pg'+p.charAt(0).toUpperCase()+p.slice(1))?.classList.toggle('hidden',p!==name);
   });
+  // Gọi loader KHÔNG await — không block UI
   switch(name){
-    case 'overview':   await loadOverview(); break;
-    case 'revenue':    await loadRevenue(); break;
-    case 'membership': await loadMembership(); break;
-    case 'rfm':        await loadRFM(); break;
-    case 'churn':      await loadChurn(); break;
-    case 'cohort':     await loadCohort(); break;
-    case 'branches':   await loadBranches(); break;
+    case 'overview':   loadOverview();   break;
+    case 'revenue':    loadRevenue();    break;
+    case 'membership': loadMembership(); break;
+    case 'rfm':        loadRFM();        break;
+    case 'churn':      loadChurn();      break;
+    case 'cohort':     loadCohort();     break;
+    case 'branches':   loadBranches();   break;
   }
 }
 
 // ══════════════════════════════════════════════════════════
-//  CACHE STATUS POLL
-// ══════════════════════════════════════════════════════════
-async function pollCache(){
-  try{
-    const r=await fetch(API+'/api/cache/status').then(r=>r.json());
-    const bar=G('cacheBar'),txt=G('cacheTxt');
-    if(r.ready){bar.className='cache-bar';txt.textContent=`✓ Cache sẵn sàng — ${r.keys_cached.length} datasets`;}
-    else{bar.className='cache-bar bld';txt.textContent=`⏳ Cache đang build (${r.keys_cached.length}/16)...`;}
-  }catch(e){G('cacheTxt').textContent='API: '+e.message;}
-}
-
-// ══════════════════════════════════════════════════════════
-//  PAGE LOADERS
+//  PAGE LOADERS — mỗi hàm độc lập, không block nhau
 // ══════════════════════════════════════════════════════════
 async function loadOverview(){
-  G('kpiGrid').innerHTML='<div class="card-loading" style="grid-column:1/-1">Đang tải dữ liệu...</div>';
+  DBG.log('loadOverview start');
+  setCardLoading('kpiGrid','Đang tải KPI...');
   try{
-    // Overview dùng cached endpoints → nhanh 5-15s
-    const[kpi,rev,churn,newret,memDist]=await Promise.all([
-      api('/api/kpi/overview',      20000),
-      api('/api/revenue/monthly',   20000),
-      api('/api/churn/summary',     20000),
-      api('/api/stats/new-vs-returning', 20000),
+    const[kpi,rev,churn,newret,mem]=await Promise.all([
+      api('/api/kpi/overview',20000),
+      api('/api/revenue/monthly',20000),
+      api('/api/churn/summary',20000),
+      api('/api/stats/new-vs-returning',20000),
       api('/api/membership/distribution',20000),
     ]);
-    DATA.kpi=kpi; DATA.rev=rev; DATA.churn=churn; DATA.newret=newret; DATA.memDist=memDist;
+    DATA.kpi=kpi;DATA.rev=rev;DATA.churn=churn;DATA.newret=newret;DATA.memDist=mem;
     renderKPIs(kpi);
     renderRevenueCompare(rev,'chRevOv');
-    renderTierPie(memDist,'chTierOv');
+    renderTierPie(mem,'chTierOv');
     renderNewRet(newret);
     renderChurnBars(churn,'churnSumBody');
     G('tsLbl').textContent='↻ '+new Date().toLocaleTimeString('vi-VN');
+    DBG.ok('loadOverview done');
     toast('✓ Dashboard đã tải');
   }catch(e){
+    DBG.err('loadOverview: '+e.message);
     G('kpiGrid').innerHTML='';
     showErr('pgOverview',e.message,'loadOverview');
   }
 }
 
 async function loadRevenue(){
-  // loading inline
+  DBG.log('loadRevenue start');
   try{
-    if(!DATA.rev)  DATA.rev   =await api('/api/revenue/monthly',20000);
-    if(!DATA.aov25) DATA.aov25=await api('/api/aov/distribution?year=2025',20000);
-    if(!DATA.aov26) DATA.aov26=await api('/api/aov/distribution?year=2026',20000);
-    if(!DATA.frq25) DATA.frq25=await api('/api/frequency/distribution?year=2025',20000);
-    if(!DATA.frq26) DATA.frq26=await api('/api/frequency/distribution?year=2026',20000);
+    if(!DATA.rev)   DATA.rev   =await api('/api/revenue/monthly',20000);
+    if(!DATA.aov25) DATA.aov25 =await api('/api/aov/distribution?year=2025',20000);
+    if(!DATA.aov26) DATA.aov26 =await api('/api/aov/distribution?year=2026',20000);
+    if(!DATA.frq25) DATA.frq25 =await api('/api/frequency/distribution?year=2025',20000);
+    if(!DATA.frq26) DATA.frq26 =await api('/api/frequency/distribution?year=2026',20000);
     renderRevenue(); renderAov(); renderFreq();
-  }catch(e){showErr('pgRevenue',e.message,'loadRevenue');}
-  // done
+    DBG.ok('loadRevenue done');
+  }catch(e){ DBG.err('loadRevenue: '+e.message); showErr('pgRevenue',e.message,'loadRevenue'); }
 }
 
 async function loadMembership(){
-  // loading inline
+  DBG.log('loadMembership start');
   try{
     if(!DATA.memDist) DATA.memDist=await api('/api/membership/distribution',20000);
     if(!DATA.memTier) DATA.memTier=await api('/api/membership/revenue-by-tier',20000);
     renderTierPie(DATA.memDist,'chMemPie');
     renderMemRev(DATA.memDist);
     renderTierAOV(DATA.memTier);
-  }catch(e){showErr('pgMembership',e.message,'loadMembership');}
-  // done
+    DBG.ok('loadMembership done');
+  }catch(e){ DBG.err('loadMembership: '+e.message); showErr('pgMembership',e.message,'loadMembership'); }
 }
 
 async function loadRFM(){
   const from=G('rfmFrom')?.value||''; const to=G('rfmTo')?.value||'';
-  G('rfmGrid').innerHTML=`<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--tx2)">
-    <div style="font-size:28px;margin-bottom:8px">⏳</div>
-    <div style="font-weight:700;margin-bottom:4px">Đang tính RFM — 30–60 giây</div>
-    <div style="font-size:11px;color:var(--tx3);font-family:var(--mn)">NTILE window function trên toàn bộ giao dịch</div>
+  DBG.log(`loadRFM start — from:${from||'all'} to:${to||'all'}`);
+  G('rfmGrid').innerHTML=`<div style="grid-column:1/-1;padding:36px;text-align:center;color:var(--tx2)">
+    <div style="font-size:32px;margin-bottom:10px">⏳</div>
+    <div style="font-weight:700;font-size:14px;margin-bottom:5px">Đang tính RFM — khoảng 30–60 giây</div>
+    <div style="font-size:11px;color:var(--tx3);font-family:var(--mn)">Window function NTILE trên toàn bộ giao dịch<br>Nhấn 🐛 Log góc phải để theo dõi tiến trình</div>
   </div>`;
   try{
-    let path='/api/v2/rfm/segments';
     const params=[];
     if(from) params.push('date_from='+from);
     if(to)   params.push('date_to='+to);
-    if(params.length) path+='?'+params.join('&');
-    const data=await api(path, 65000); // 65s — RFM ~37s theo benchmark
+    const path='/api/v2/rfm/segments'+(params.length?'?'+params.join('&'):'');
+    const data=await api(path, 65000);
     renderRFM(data);
+    DBG.ok('loadRFM done — '+data.length+' segments');
     toast('✓ RFM tính xong!');
   }catch(e){
+    DBG.err('loadRFM: '+e.message);
     G('rfmGrid').innerHTML='';
     showErr('pgRfm',e.message,'loadRFM');
   }
 }
 
 async function loadChurn(){
+  DBG.log('loadChurn start');
   try{
-    if(!DATA.churn)      DATA.churn     =await api('/api/churn/summary',          25000);
-    if(!DATA.churnMon)   DATA.churnMon  =await api('/api/churn/monthly-pattern',  25000);
-    if(!DATA.churnTier)  DATA.churnTier =await api('/api/v2/churn/by-tier',       45000);
+    if(!DATA.churn)      DATA.churn     =await api('/api/churn/summary',         25000);
+    if(!DATA.churnMon)   DATA.churnMon  =await api('/api/churn/monthly-pattern', 25000);
+    if(!DATA.churnTier)  DATA.churnTier =await api('/api/v2/churn/by-tier',      45000);
     if(!DATA.activeTier) DATA.activeTier=await api('/api/v2/active/by-tier-month',45000);
     renderChurnBars(DATA.churn,'churnPatBody');
     renderChurnMonthly(DATA.churnMon);
     renderChurnByTier(DATA.churnTier);
     renderActiveTierChart();
+    DBG.ok('loadChurn done');
     toast('✓ Churn data đã tải');
-  }catch(e){showErr('pgChurn',e.message,'loadChurn');}
-}
-    renderChurnBars(DATA.churn,'churnPatBody');
-    renderChurnMonthly(DATA.churnMon);
-    renderChurnByTier(DATA.churnTier);
-    renderActiveTierChart();
-  }catch(e){showErr('pgChurn',e.message,'loadChurn');}
-  // done
-}
-
-function switchChurnTab(tab,btn){
-  document.querySelectorAll('#churnTabs .tab-btn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  G('churnPanAll').classList.toggle('hidden',tab!=='all');
-  G('churnPanTier').classList.toggle('hidden',tab!=='tier');
-  G('churnPanActive').classList.toggle('hidden',tab!=='active');
-}
-
-function switchSearchTab(tab,btn){
-  document.querySelectorAll('#pgSearch .tab-btn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  G('srchPanQuick').classList.toggle('hidden',tab!=='quick');
-  G('srchPanFilter').classList.toggle('hidden',tab!=='filter');
+  }catch(e){ DBG.err('loadChurn: '+e.message); showErr('pgChurn',e.message,'loadChurn'); }
 }
 
 async function loadCohort(){
-  // loading inline
+  DBG.log('loadCohort start');
   try{
     if(!DATA.cohort) DATA.cohort=await api('/api/cohort/retention',55000);
     renderCohort(DATA.cohort);
-  }catch(e){showErr('pgCohort',e.message,'loadCohort');}
-  // done
+    DBG.ok('loadCohort done');
+  }catch(e){ DBG.err('loadCohort: '+e.message); showErr('pgCohort',e.message,'loadCohort'); }
 }
 
 async function loadBranches(){
-  // loading inline
+  DBG.log('loadBranches start');
   try{
     const yr=G('selBrYr')?.value||0, mon=G('selBrMon')?.value||0;
     const key=`br${yr}_${mon}`;
-    if(!DATA[key]) DATA[key]=await api(`/api/branches/by-tier?year=${yr}&month=${mon}&top_n=30`,45000);
+    if(!DATA[key]) DATA[key]=await api(`/api/v2/branches/by-tier?year=${yr}&month=${mon}&top_n=30`,45000);
     renderBranchChart(DATA[key]);
     renderBranchTable(DATA[key]);
-  }catch(e){showErr('pgBranches',e.message,'loadBranches');}
-  // done
+    DBG.ok('loadBranches done');
+  }catch(e){ DBG.err('loadBranches: '+e.message); showErr('pgBranches',e.message,'loadBranches'); }
 }
+
+// ══════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════
+function G(id){return document.getElementById(id);}
+function fn(n){return n!=null?Number(n).toLocaleString('vi-VN'):'—';}
+function fv(n){
+  if(n==null)return'—'; n=Number(n);
+  if(n>=1e9)return(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return(n/1e6).toFixed(1)+'M';
+  if(n>=1e3)return(n/1e3).toFixed(0)+'K';
+  return n.toLocaleString('vi-VN',{maximumFractionDigits:0});
+}
+function setCardLoading(id, msg='Đang tải...'){
+  const el=G(id); if(!el) return;
+  el.innerHTML=`<div class="card-loading" style="grid-column:1/-1">${msg}</div>`;
+}
+const MON_LBL=['','T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+const TC={'VVIP':'#f59e0b','VIP':'#7c3aed','Member':'#16a34a','Khac':'#94a3b8'};
+const SC={'Champions':'#16a34a','Loyal Customers':'#2563eb','Potential Loyal':'#0891b2',
+  'New Customers':'#7c3aed','Promising':'#d97706','Need Attention':'#ea580c',
+  'At Risk':'#dc2626','Cannot Lose Them':'#991b1b','Hibernating':'#64748b',
+  'About to Sleep':'#94a3b8','Lost':'#cbd5e1'};
+const RFM_FORMULA={
+  'Champions':'R=5, F≥4 — Mua gần, thường xuyên, giá trị cao',
+  'Loyal Customers':'R≥4, F≥3 — Trung thành, tần suất cao',
+  'Potential Loyal':'R≥3, F≥1, M≥3 — Tiềm năng trung thành',
+  'New Customers':'R=5, F=1 — Mới mua lần đầu',
+  'Promising':'R≥4, F≤2 — Mua gần nhưng ít lần',
+  'Need Attention':'R=3, F≤3 — Đang giảm hoạt động',
+  'At Risk':'R≤2, F≥3 — Từng trung thành, đang rời đi',
+  'Cannot Lose Them':'R=1, F≥4 — Giá trị cao, lâu không mua — CỨU NGAY',
+  'Hibernating':'R≤2, F=2 — Không hoạt động lâu',
+  'About to Sleep':'R=2, F=1 — Gần như không mua',
+  'Lost':'R=1, F=1 — Đã rời đi',
+};
+function dc(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
+const COPTS=(yLbl='')=>({responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{position:'top'},tooltip:{mode:'index',intersect:false}},
+  scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'},
+    title:{display:!!yLbl,text:yLbl}}}});
+function sortRev(data){return[...data].sort((a,b)=>a.year!==b.year?a.year-b.year:a.month-b.month);}
 
 // ══════════════════════════════════════════════════════════
 //  RENDERERS
@@ -758,63 +822,58 @@ async function loadBranches(){
 function renderKPIs(d){
   const cr=d.kh_2025?(d.churned/d.kh_2025*100).toFixed(1):0;
   G('kpiGrid').innerHTML=[
-    ['gr',T('kpi_total'),fn(d.total_kh),`${fn(d.active_kh)} Hoạt Động`],
-    ['bl',T('kpi_active'),fn(d.active_buyers_90d),'mua trong 90 ngày qua'],
-    ['pu',T('kpi_tier'),`${fn(d.cnt_vvip)} / ${fn(d.cnt_vip)}`,`${fn(d.cnt_member)} Member`],
-    ['gr',T('kpi_rev25'),fv(d.revenue_2025),`${fn(d.bills_2025)} bills`],
-    ['or',T('kpi_rev26'),fv(d.revenue_2026),`${fn(d.bills_2026)} bills`],
-    ['tl',T('kpi_aov'),fv(d.aov_2026),`vs 2025: ${fv(d.aov_2025)}`],
-    ['rd',T('kpi_churn'),`${cr}%`,`${fn(d.churned)} KH không mua 2026`],
+    ['gr',T('kpi_total'),   fn(d.total_kh),    fn(d.active_kh)+' Hoạt Động'],
+    ['bl',T('kpi_active'),  fn(d.active_buyers_90d),'mua trong 90 ngày qua'],
+    ['pu',T('kpi_tier'),    fn(d.cnt_vvip)+' / '+fn(d.cnt_vip),fn(d.cnt_member)+' Member'],
+    ['gr',T('kpi_rev25'),   fv(d.revenue_2025),fn(d.bills_2025)+' bills'],
+    ['or',T('kpi_rev26'),   fv(d.revenue_2026),fn(d.bills_2026)+' bills'],
+    ['tl',T('kpi_aov'),     fv(d.aov_2026),   'vs 2025: '+fv(d.aov_2025)],
+    ['rd',T('kpi_churn'),   cr+'%',            fn(d.churned)+' KH không mua 2026'],
     ['bl',T('kpi_retained'),fn(d.kh_2026_also),'mua cả 2025 & 2026'],
-  ].map(([c,l,v,s])=>`<div class="kpi ${c}"><div class="kpi-lbl">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s}</div></div>`).join('');
+  ].map(([c,l,v,s])=>`<div class="kpi ${c}">
+    <div class="kpi-lbl">${l}</div>
+    <div class="kpi-val">${v}</div>
+    <div class="kpi-sub">${s}</div>
+  </div>`).join('');
 }
 
-// FIX: Revenue chart month ordering — sắp xếp đúng theo year+month
-function sortRevData(data){ return [...data].sort((a,b)=>a.year!==b.year?a.year-b.year:a.month-b.month); }
-const MON_LBL=['','T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
-
-function renderRevenueCompare(data, canvasId='chRevOv'){
-  dc(canvasId);
-  const sorted=sortRevData(data);
+function renderRevenueCompare(data, cid){
+  dc(cid);
+  const sorted=sortRev(data);
   const months=[...new Set(sorted.map(d=>d.month))].sort((a,b)=>a-b);
-  const labels=months.map(m=>MON_LBL[m]);
-  CH[canvasId]=new Chart(G(canvasId),{type:'line',data:{labels,datasets:[
-    {label:'2025',data:months.map(m=>{const r=sorted.find(d=>d.year===2025&&d.month===m);return r?+(r.revenue/1e9).toFixed(2):null;}),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.07)',tension:.4,fill:true,pointRadius:4},
-    {label:'2026',data:months.map(m=>{const r=sorted.find(d=>d.year===2026&&d.month===m);return r?+(r.revenue/1e9).toFixed(2):null;}),borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.07)',tension:.4,fill:true,pointRadius:4},
-  ]},options:COPTS('Tỷ VND')});
+  CH[cid]=new Chart(G(cid),{type:'line',data:{
+    labels:months.map(m=>MON_LBL[m]),
+    datasets:[
+      {label:'2025',data:months.map(m=>{const r=sorted.find(d=>d.year===2025&&d.month===m);return r?+(r.revenue/1e9).toFixed(2):null;}),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.07)',tension:.4,fill:true,pointRadius:4},
+      {label:'2026',data:months.map(m=>{const r=sorted.find(d=>d.year===2026&&d.month===m);return r?+(r.revenue/1e9).toFixed(2):null;}),borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.07)',tension:.4,fill:true,pointRadius:4},
+    ]},options:COPTS('Tỷ VND')});
 }
 
 function renderRevenue(){
   dc('chRevDetail');
   const data=DATA.rev||[]; const yr=+(G('selRevYr')?.value||0);
-  if(yr===0){ renderRevenueCompare(data,'chRevDetail'); return; }
-  const filtered=sortRevData(data.filter(d=>d.year===yr));
+  if(yr===0){renderRevenueCompare(data,'chRevDetail');return;}
+  const f=sortRev(data.filter(d=>d.year===yr));
   CH['chRevDetail']=new Chart(G('chRevDetail'),{type:'bar',data:{
-    labels:filtered.map(d=>MON_LBL[d.month]),
+    labels:f.map(d=>MON_LBL[d.month]),
     datasets:[
-      {label:`DS (tỷ)`,data:filtered.map(d=>+(d.revenue/1e9).toFixed(2)),backgroundColor:'rgba(22,163,74,.7)',borderRadius:5,yAxisID:'y'},
-      {label:'Bills',data:filtered.map(d=>d.bills),type:'line',borderColor:'var(--bl)',yAxisID:'y1',tension:.4,pointRadius:4},
-    ]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index'}},
+      {label:'DS (tỷ)',data:f.map(d=>+(d.revenue/1e9).toFixed(2)),backgroundColor:'rgba(22,163,74,.7)',borderRadius:5,yAxisID:'y'},
+      {label:'Bills',data:f.map(d=>d.bills),type:'line',borderColor:'var(--bl)',yAxisID:'y1',tension:.4,pointRadius:4},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index'}},
     scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'}},y1:{position:'right',grid:{display:false}}}}});
 }
-
 function renderAov(){
   dc('chAOV');
   const yr=G('selAovYr')?.value||'2025';
   const data=(yr==='2025'?DATA.aov25:DATA.aov26)||[];
-  CH['chAOV']=new Chart(G('chAOV'),{type:'bar',data:{labels:data.map(d=>d.bucket.replace(/^\d_/,'')),datasets:[{label:'Số GD',data:data.map(d=>d.count),backgroundColor:'rgba(124,58,237,.7)',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'}}}}});
+  CH['chAOV']=new Chart(G('chAOV'),{type:'bar',data:{labels:data.map(d=>d.bucket.replace(/^\d_/,'')),datasets:[{label:'GD',data:data.map(d=>d.count),backgroundColor:'rgba(124,58,237,.7)',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'}}}}});
 }
-
 function renderFreq(){
   dc('chFreq');
   const yr=G('selFrqYr')?.value||'2025';
   const data=(yr==='2025'?DATA.frq25:DATA.frq26)||[];
-  CH['chFreq']=new Chart(G('chFreq'),{type:'bar',data:{labels:data.map(d=>d.bucket.replace(/^\d_/,'')),datasets:[{label:'Số KH',data:data.map(d=>d.customers),backgroundColor:'rgba(217,119,6,.7)',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'}}}}});
+  CH['chFreq']=new Chart(G('chFreq'),{type:'bar',data:{labels:data.map(d=>d.bucket.replace(/^\d_/,'')),datasets:[{label:'KH',data:data.map(d=>d.customers),backgroundColor:'rgba(217,119,6,.7)',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'}}}}});
 }
-
-const TC={'VVIP':'#f59e0b','VIP':'#7c3aed','Member':'#16a34a','Khac':'#94a3b8'};
-
 function renderTierPie(data,id){
   dc(id);
   CH[id]=new Chart(G(id),{type:'doughnut',data:{labels:data.map(d=>d.tier),datasets:[{data:data.map(d=>d.count),backgroundColor:data.map(d=>TC[d.tier]||'#94a3b8'),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.label}: ${fn(c.raw)}`}}}}});
@@ -831,23 +890,6 @@ function renderTierAOV(data){
     {label:'2026',data:tiers.map(t=>{const r=data.find(d=>d.tier===t&&d.year===2026);return r?r.aov:null;}),backgroundColor:'rgba(22,163,74,.65)',borderRadius:5},
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>fv(v)}}}}});
 }
-
-// RFM tooltips
-const RFM_FORMULA={
-  'Champions':'R=5, F≥4 — Mua gần, mua thường xuyên, giá trị cao',
-  'Loyal Customers':'R≥4, F≥3 — Khách hàng trung thành, tần suất cao',
-  'Potential Loyal':'R≥3, F≥1, M≥3 — Tiềm năng trở thành trung thành',
-  'New Customers':'R=5, F=1 — Mới mua lần đầu gần đây',
-  'Promising':'R≥4, F≤2 — Mua gần nhưng ít lần',
-  'Need Attention':'R=3, F≤3 — Bắt đầu giảm hoạt động',
-  'At Risk':'R≤2, F≥3 — Từng trung thành nhưng đang rời đi',
-  'Cannot Lose Them':'R=1, F≥4 — Giá trị cao nhưng lâu không mua — CẦN CỨU NGAY',
-  'Hibernating':'R≤2, F=2 — Không hoạt động lâu',
-  'About to Sleep':'R=2, F=1 — Gần như không còn mua',
-  'Lost':'R=1, F=1 — Đã rời đi',
-};
-const SC={'Champions':'#16a34a','Loyal Customers':'#2563eb','Potential Loyal':'#0891b2','New Customers':'#7c3aed','Promising':'#d97706','Need Attention':'#ea580c','At Risk':'#dc2626','Cannot Lose Them':'#991b1b','Hibernating':'#64748b','About to Sleep':'#94a3b8','Lost':'#cbd5e1'};
-
 function renderRFM(data){
   G('rfmGrid').innerHTML=data.map(s=>`
     <div class="seg-card" style="border-color:${SC[s.segment]||'var(--bd)'}40">
@@ -863,21 +905,18 @@ function renderRFM(data){
   dc('chRFM');
   CH['chRFM']=new Chart(G('chRFM'),{type:'bar',data:{labels:data.map(d=>d.segment),datasets:[{label:'KH',data:data.map(d=>d.customers),backgroundColor:data.map(d=>SC[d.segment]||'#94a3b8'),borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,.04)'}},y:{grid:{display:false}}}}});
 }
-
-// FIX: Churn ordering — sort by months_active 1→2→3→4→5(không mua)
-function renderChurnBars(data,targetId){
-  // Sort: 1 tháng → 2 → 3 → ≥4 → không mua
+function renderChurnBars(data,id){
   const order=['Mua 1 tháng','Mua 2 tháng','Mua 3 tháng','Mua đều ≥ 4 tháng','Không mua 2026'];
   const sorted=[...data].sort((a,b)=>order.indexOf(a.pattern)-order.indexOf(b.pattern));
   const colors={'Không mua 2026':'var(--rd)','Mua đều ≥ 4 tháng':'var(--gr)','Mua 3 tháng':'var(--tl)','Mua 2 tháng':'var(--bl)','Mua 1 tháng':'var(--or)'};
-  G(targetId).innerHTML=`<div class="bar-list">${sorted.map(r=>`
+  if(!G(id))return;
+  G(id).innerHTML=`<div class="bar-list">${sorted.map(r=>`
     <div class="bar-row">
       <div class="bar-lbl">${r.pattern}</div>
       <div class="bar-trk"><div class="bar-fill" style="width:${r.pct}%;background:${colors[r.pattern]||'var(--pu)'}"><span>${r.pct}%</span></div></div>
       <div class="bar-cnt">${fn(r.customers)}</div>
     </div>`).join('')}</div>`;
 }
-
 function renderChurnMonthly(data){
   dc('chMonthly');
   CH['chMonthly']=new Chart(G('chMonthly'),{type:'bar',data:{
@@ -885,88 +924,48 @@ function renderChurnMonthly(data){
     datasets:[
       {label:'% KH active',data:data.map(d=>d.active_rate),backgroundColor:'rgba(22,163,74,.7)',borderRadius:5,yAxisID:'y'},
       {label:'DS (tỷ)',data:data.map(d=>d.total_revenue?+(d.total_revenue/1e9).toFixed(2):null),type:'line',borderColor:'var(--bl)',yAxisID:'y1',tension:.4,pointRadius:5},
-    ]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
     scales:{y:{title:{display:true,text:'%'},max:100,grid:{color:'rgba(0,0,0,.04)'}},y1:{position:'right',title:{display:true,text:'Tỷ VND'},grid:{display:false}}}}});
 }
-
-// NEW: Churn by tier
 function renderChurnByTier(data){
-  // Stacked bar: x=tier, stack=pattern, y=customers
+  if(!data){return;}
+  dc('chChurnTier');
   const tiers=['VVIP','VIP','Member'];
   const patterns=['Mua 1 tháng','Mua 2 tháng','Mua 3 tháng','Mua đều ≥ 4 tháng','Không mua 2026'];
   const colors=['#f59e0b','#2563eb','#0891b2','#16a34a','#dc2626'];
-  dc('chChurnTier');
-  CH['chChurnTier']=new Chart(G('chChurnTier'),{type:'bar',data:{
-    labels:tiers,
-    datasets:patterns.map((p,i)=>({
-      label:p,
-      data:tiers.map(tier=>{const r=data.find(d=>d.tier===tier&&d.pattern===p);return r?r.customers:0;}),
-      backgroundColor:colors[i],stack:'s',borderRadius:i===patterns.length-1?5:0,
-    }))
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index'}},
-    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'rgba(0,0,0,.04)'}}}}});
-
-  // Detail table per tier
-  const html=tiers.map(tier=>{
-    const rows=data.filter(d=>d.tier===tier);
-    const order=['Mua 1 tháng','Mua 2 tháng','Mua 3 tháng','Mua đều ≥ 4 tháng','Không mua 2026'];
-    const sorted=[...rows].sort((a,b)=>order.indexOf(a.pattern)-order.indexOf(b.pattern));
+  CH['chChurnTier']=new Chart(G('chChurnTier'),{type:'bar',data:{labels:tiers,
+    datasets:patterns.map((p,i)=>({label:p,data:tiers.map(tier=>{const r=data.find(d=>d.tier===tier&&d.pattern===p);return r?r.customers:0;}),backgroundColor:colors[i],stack:'s'}))
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index'}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'rgba(0,0,0,.04)'}}}}});
+  G('churnTierDetail').innerHTML=tiers.map(tier=>{
+    const rows=[...data.filter(d=>d.tier===tier)].sort((a,b)=>['Mua 1 tháng','Mua 2 tháng','Mua 3 tháng','Mua đều ≥ 4 tháng','Không mua 2026'].indexOf(a.pattern)-['Mua 1 tháng','Mua 2 tháng','Mua 3 tháng','Mua đều ≥ 4 tháng','Không mua 2026'].indexOf(b.pattern));
     return `<div class="card" style="margin-bottom:10px">
       <div class="card-head"><div class="card-ttl"><div class="dot" style="background:${TC[tier]||'#94a3b8'}"></div>${tier}</div></div>
-      <div class="card-body" style="padding:10px 14px">${sorted.map(r=>`
+      <div class="card-body" style="padding:10px 14px">${rows.map(r=>`
         <div class="bar-row">
           <div class="bar-lbl">${r.pattern}</div>
           <div class="bar-trk"><div class="bar-fill" style="width:${r.pct}%;background:${TC[tier]||'#94a3b8'}"><span>${r.pct}%</span></div></div>
           <div class="bar-cnt">${fn(r.customers)}</div>
-        </div>`).join('')}
-      </div></div>`;
+        </div>`).join('')}</div></div>`;
   }).join('');
-  G('churnTierDetail').innerHTML=html;
 }
-
-// NEW: Active by tier by month
 function renderActiveTierChart(){
   dc('chActiveTier');
   const data=DATA.activeTier||[];
   const mon=+(G('selActiveMon')?.value||0);
-  const filtered=mon?data.filter(d=>d.Month===mon):data;
   const tiers=['VVIP','VIP','Member'];
-  const tierColors={'VVIP':'#f59e0b','VIP':'#7c3aed','Member':'#16a34a'};
+  const tc={'VVIP':'#f59e0b','VIP':'#7c3aed','Member':'#16a34a'};
   if(mon){
-    // Single month — bar per tier
-    CH['chActiveTier']=new Chart(G('chActiveTier'),{type:'bar',data:{
-      labels:tiers,
-      datasets:[{label:`T${mon} — % Active`,data:tiers.map(t=>{const r=filtered.find(d=>d.tier===t);return r?r.active_rate:0;}),backgroundColor:tiers.map(t=>tierColors[t]||'#94a3b8'),borderRadius:7}]
-    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{max:100,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v+'%'}}}}});
+    CH['chActiveTier']=new Chart(G('chActiveTier'),{type:'bar',data:{labels:tiers,datasets:[{label:`T${mon} %Active`,data:tiers.map(t=>{const r=data.find(d=>d.tier===t&&d.Month===mon);return r?r.active_rate:0;}),backgroundColor:tiers.map(t=>tc[t]),borderRadius:7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{max:100,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v+'%'}}}}});
   }else{
-    // All months — line per tier
     const months=[1,2,3,4,5];
-    CH['chActiveTier']=new Chart(G('chActiveTier'),{type:'line',data:{
-      labels:months.map(m=>'T'+m),
-      datasets:tiers.map(tier=>({
-        label:tier,
-        data:months.map(m=>{const r=data.find(d=>d.tier===tier&&d.Month===m);return r?r.active_rate:null;}),
-        borderColor:tierColors[tier],backgroundColor:tierColors[tier]+'22',tension:.4,fill:true,pointRadius:5,
-      }))
-    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index'}},
-      scales:{x:{grid:{display:false}},y:{max:100,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v+'%'}}}}});
+    CH['chActiveTier']=new Chart(G('chActiveTier'),{type:'line',data:{labels:months.map(m=>'T'+m),datasets:tiers.map(tier=>({label:tier,data:months.map(m=>{const r=data.find(d=>d.tier===tier&&d.Month===m);return r?r.active_rate:null;}),borderColor:tc[tier],backgroundColor:tc[tier]+'22',tension:.4,fill:true,pointRadius:5}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index'}},scales:{x:{grid:{display:false}},y:{max:100,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v+'%'}}}}});
   }
 }
-
 function renderNewRet(data){
   dc('chNewRet');
-  const sorted=sortRevData(data.map(d=>({...d,year:d.year,month:d.Month||d.month})));
-  CH['chNewRet']=new Chart(G('chNewRet'),{type:'bar',data:{
-    labels:sorted.map(d=>d.year_month),
-    datasets:[
-      {label:'KH mới',data:sorted.map(d=>d.new_customers),backgroundColor:'rgba(22,163,74,.7)',stack:'s'},
-      {label:'KH quay lại',data:sorted.map(d=>d.returning_customers),backgroundColor:'rgba(37,99,235,.6)',stack:'s'},
-    ]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
-    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'rgba(0,0,0,.04)'}}}}});
+  const s=sortRev(data);
+  CH['chNewRet']=new Chart(G('chNewRet'),{type:'bar',data:{labels:s.map(d=>d.year_month),datasets:[{label:'KH mới',data:s.map(d=>d.new_customers),backgroundColor:'rgba(22,163,74,.7)',stack:'s'},{label:'KH quay lại',data:s.map(d=>d.returning_customers),backgroundColor:'rgba(37,99,235,.6)',stack:'s'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'rgba(0,0,0,.04)'}}}}});
 }
-
 function renderCohort(data){
   const cohorts=[...new Set(data.map(d=>d.cohort_month))].sort();
   const maxOff=Math.max(...data.map(d=>d.month_offset));
@@ -976,63 +975,41 @@ function renderCohort(data){
   const tb=cohorts.map(c=>{
     const row=data.filter(d=>d.cohort_month===c);
     const size=row.find(d=>d.month_offset===0)?.cohort_size||0;
-    const cells=offsets.map(o=>{const r=row.find(d=>d.month_offset===o);const p=r?.retention_pct;
-      return `<td style="background:${col(p)};padding:6px 9px;border:1px solid var(--bd);text-align:center;font-family:var(--mn);font-size:11px;font-weight:600">${p!=null?p+'%':''}</td>`;
-    }).join('');
+    const cells=offsets.map(o=>{const r=row.find(d=>d.month_offset===o);const p=r?.retention_pct;return `<td style="background:${col(p)};padding:6px 9px;border:1px solid var(--bd);text-align:center;font-family:var(--mn);font-size:11px;font-weight:600">${p!=null?p+'%':''}</td>`;}).join('');
     return `<tr><td style="padding:6px 12px;border:1px solid var(--bd);font-weight:600;font-size:12px;white-space:nowrap">${c}</td><td style="padding:6px 12px;border:1px solid var(--bd);font-family:var(--mn);font-size:12px">${fn(size)}</td>${cells}</tr>`;
   }).join('');
   G('cohortBody').innerHTML=`<p style="font-size:11px;color:var(--tx3);margin-bottom:8px">🟢≥70% 🟡30-70% 🔴&lt;30%</p><table style="border-collapse:collapse"><thead>${th}</thead><tbody>${tb}</tbody></table>`;
 }
-
-// NEW: Branches stacked by tier
 function renderBranchChart(data){
   dc('chBranch');
-  CH['chBranch']=new Chart(G('chBranch'),{type:'bar',data:{
-    labels:data.map(d=>d.Store_Name||d.Store_No||'?'),
-    datasets:[
-      {label:'VVIP', data:data.map(d=>+(d.rev_vvip/1e6).toFixed(1)),  backgroundColor:'#f59e0b',stack:'s'},
-      {label:'VIP',  data:data.map(d=>+(d.rev_vip/1e6).toFixed(1)),   backgroundColor:'#7c3aed',stack:'s'},
-      {label:'Member',data:data.map(d=>+(d.rev_member/1e6).toFixed(1)),backgroundColor:'#16a34a',stack:'s'},
-    ]
-  },options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{position:'top'},tooltip:{mode:'index',callbacks:{label:ctx=>{
-      const d=data[ctx.dataIndex];
-      const tier=ctx.dataset.label;
-      const bills=tier==='VVIP'?d.bills_vvip:tier==='VIP'?d.bills_vip:d.bills_member;
-      const aov=tier==='VVIP'?d.aov_vvip:tier==='VIP'?d.aov_vip:d.aov_member;
-      return `${tier}: ${fv((ctx.raw||0)*1e6)} | ${fn(bills)} bills | AOV: ${fv(aov)}`;
-    }}}},
-    scales:{x:{stacked:true,grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{stacked:true,grid:{color:'rgba(0,0,0,.04)'},title:{display:true,text:'Triệu VND'}}}}});
+  CH['chBranch']=new Chart(G('chBranch'),{type:'bar',data:{labels:data.map(d=>d.Store_Name||d.Store_No||'?'),datasets:[
+    {label:'VVIP',data:data.map(d=>+(d.rev_vvip/1e6).toFixed(1)),backgroundColor:'#f59e0b',stack:'s'},
+    {label:'VIP', data:data.map(d=>+(d.rev_vip/1e6).toFixed(1)), backgroundColor:'#7c3aed',stack:'s'},
+    {label:'Member',data:data.map(d=>+(d.rev_member/1e6).toFixed(1)),backgroundColor:'#16a34a',stack:'s'},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index',callbacks:{label:ctx=>{const d=data[ctx.dataIndex];const tier=ctx.dataset.label;const bills=tier==='VVIP'?d.bills_vvip:tier==='VIP'?d.bills_vip:d.bills_member;const aov=tier==='VVIP'?d.aov_vvip:tier==='VIP'?d.aov_vip:d.aov_member;return `${tier}: ${fv((ctx.raw||0)*1e6)} | ${fn(bills)} bills | AOV:${fv(aov)}`;},}}},scales:{x:{stacked:true,grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{stacked:true,grid:{color:'rgba(0,0,0,.04)'},title:{display:true,text:'Triệu VND'}}}}});
 }
-
 function renderBranchTable(data){
   G('branchTable').innerHTML=`<div style="overflow-x:auto"><table>
-    <thead><tr><th>#</th><th>Chi nhánh</th><th>Tổng DS</th><th>Bills</th><th>VVIP DS</th><th>VIP DS</th><th>Member DS</th><th>AOV</th></tr></thead>
-    <tbody>${data.map((r,i)=>`<tr>
-      <td class="tbl-num">${i+1}</td>
-      <td style="font-weight:600">${r.Store_Name||r.Store_No}</td>
-      <td class="tbl-num">${fv(r.revenue_total)}</td>
-      <td class="tbl-num">${fn(r.bills_total)}</td>
-      <td style="color:#f59e0b;font-family:var(--mn)">${fv(r.rev_vvip)}</td>
-      <td style="color:#7c3aed;font-family:var(--mn)">${fv(r.rev_vip)}</td>
-      <td style="color:#16a34a;font-family:var(--mn)">${fv(r.rev_member)}</td>
-      <td class="tbl-num">${fv(r.aov_member||0)}</td>
-    </tr>`).join('')}</tbody>
+    <thead><tr><th>#</th><th>Chi nhánh</th><th>Tổng DS</th><th>Bills</th><th style="color:#f59e0b">VVIP DS</th><th style="color:#7c3aed">VIP DS</th><th style="color:#16a34a">Member DS</th></tr></thead>
+    <tbody>${data.map((r,i)=>`<tr><td class="tbl-num">${i+1}</td><td style="font-weight:600">${r.Store_Name||r.Store_No}</td><td class="tbl-num">${fv(r.revenue_total)}</td><td class="tbl-num">${fn(r.bills_total)}</td><td style="color:#f59e0b;font-family:var(--mn)">${fv(r.rev_vvip)}</td><td style="color:#7c3aed;font-family:var(--mn)">${fv(r.rev_vip)}</td><td style="color:#16a34a;font-family:var(--mn)">${fv(r.rev_member)}</td></tr>`).join('')}</tbody>
   </table></div>`;
 }
 
 // ══════════════════════════════════════════════════════════
-//  SEARCH QUICK
+//  SEARCH
 // ══════════════════════════════════════════════════════════
-let srchTimer;
+function switchChurnTab(tab,btn){document.querySelectorAll('#churnTabs .tab-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');G('churnPanAll').classList.toggle('hidden',tab!=='all');G('churnPanTier').classList.toggle('hidden',tab!=='tier');G('churnPanActive').classList.toggle('hidden',tab!=='active');}
+function switchSearchTab(tab,btn){document.querySelectorAll('#pgSearch .tab-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');G('srchPanQuick').classList.toggle('hidden',tab!=='quick');G('srchPanFilter').classList.toggle('hidden',tab!=='filter');}
+
+let srchT;
 function onSearch(){
-  clearTimeout(srchTimer);
-  srchTimer=setTimeout(async()=>{
-    const q=G('srchInp').value.trim(); const dd=G('srchDrop');
+  clearTimeout(srchT);
+  srchT=setTimeout(async()=>{
+    const q=G('srchInp').value.trim();const dd=G('srchDrop');
     if(q.length<2){dd.style.display='none';return;}
     try{
       const data=await api(`/api/customers/search?q=${encodeURIComponent(q)}`,10000);
-      if(!data.length){dd.innerHTML='<div style="padding:12px;color:var(--tx3);font-style:italic">Không tìm thấy</div>';dd.style.display='block';return;}
+      if(!data.length){dd.innerHTML='<div style="padding:12px;color:var(--tx3)">Không tìm thấy</div>';dd.style.display='block';return;}
       dd.innerHTML=data.map(d=>`<div class="sr-item" onclick="loadKHDetail('${d.MaKH}')">
         <span class="sr-code">${d.MaKH}</span>
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${d.KhachHang||'—'}</span>
@@ -1043,176 +1020,120 @@ function onSearch(){
     }catch(e){dd.innerHTML=`<div style="padding:12px;color:var(--rd);font-size:12px">Lỗi: ${e.message}</div>`;dd.style.display='block';}
   },350);
 }
-
 async function loadKHDetail(makh){
   G('srchDrop').style.display='none';
-  // loading inline
   try{
+    DBG.log('loadKHDetail: '+makh);
     const d=await api(`/api/customers/detail/${encodeURIComponent(makh)}`,20000);
     G('detailName').textContent=d.info.KhachHang||makh;
     G('khDetail').classList.remove('hidden');
-    const s25=d.stats.find(s=>s.year==2025)||{};
-    const s26=d.stats.find(s=>s.year==2026)||{};
+    const s25=d.stats.find(s=>s.year==2025)||{}, s26=d.stats.find(s=>s.year==2026)||{};
     G('detailBody').innerHTML=`
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;margin-bottom:14px">
-        ${[['Mã KH',d.info.MaKH],['Hạng thẻ',`<span class="tier t-${(d.info.HangThe||'').toLowerCase()}">${d.info.HangThe||'—'}</span>`],
-          ['Trạng thái',`<span class="${d.info.TrangThai==='Hoạt Động'?'st-a':'st-k'}">${d.info.TrangThai||'—'}</span>`],
-          ['SĐT',d.info.PhoneNo||'—'],['CN tạo thẻ',d.info.ChiNhanhTaoThe||'—'],
-          ['CN mua nhiều nhất',d.info.ChiNhanhMuaNhieuNhat||'—'],
-          ['DSTL 2026',`<span style="color:var(--gr);font-weight:700">${fv(d.info.DSTL_2026)}</span>`],
-          ['Ngày tạo thẻ',(d.info.NgayTaoThe||'').substring(0,10)||'—'],
-        ].map(([l,v])=>`<div style="background:var(--bg);border-radius:8px;padding:9px 12px"><div style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:600;font-family:var(--mn)">${v}</div></div>`).join('')}
+        ${[['Mã KH',d.info.MaKH],['Hạng thẻ',`<span class="tier t-${(d.info.HangThe||'').toLowerCase()}">${d.info.HangThe||'—'}</span>`],['Trạng thái',`<span class="${d.info.TrangThai==='Hoạt Động'?'st-a':'st-k'}">${d.info.TrangThai||'—'}</span>`],['SĐT',d.info.PhoneNo||'—'],['CN tạo thẻ',d.info.ChiNhanhTaoThe||'—'],['CN mua nhiều nhất',d.info.ChiNhanhMuaNhieuNhat||'—'],['DSTL 2026',`<span style="color:var(--gr);font-weight:700">${fv(d.info.DSTL_2026)}</span>`],['Ngày tạo thẻ',(d.info.NgayTaoThe||'').substring(0,10)||'—'],].map(([l,v])=>`<div style="background:var(--bg);border-radius:8px;padding:9px 12px"><div style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:600;font-family:var(--mn)">${v}</div></div>`).join('')}
       </div>
       <div class="g2" style="margin-bottom:14px">
-        <div style="background:var(--bll);border-radius:10px;padding:14px">
-          <div style="font-size:11px;font-weight:700;color:var(--bl);margin-bottom:8px">📦 2025</div>
-          <div style="display:flex;gap:14px;font-family:var(--mn)">
-            <div><div style="font-size:9px;color:var(--tx2)">BILLS</div><div style="font-size:20px;font-weight:800">${fn(s25.bills||0)}</div></div>
-            <div><div style="font-size:9px;color:var(--tx2)">DOANH SỐ</div><div style="font-size:20px;font-weight:800">${fv(s25.revenue||0)}</div></div>
-            <div><div style="font-size:9px;color:var(--tx2)">AOV</div><div style="font-size:20px;font-weight:800">${fv(s25.aov||0)}</div></div>
-          </div>
-        </div>
-        <div style="background:var(--gl);border-radius:10px;padding:14px">
-          <div style="font-size:11px;font-weight:700;color:var(--gr);margin-bottom:8px">📦 2026</div>
-          <div style="display:flex;gap:14px;font-family:var(--mn)">
-            <div><div style="font-size:9px;color:var(--tx2)">BILLS</div><div style="font-size:20px;font-weight:800">${fn(s26.bills||0)}</div></div>
-            <div><div style="font-size:9px;color:var(--tx2)">DOANH SỐ</div><div style="font-size:20px;font-weight:800">${fv(s26.revenue||0)}</div></div>
-            <div><div style="font-size:9px;color:var(--tx2)">AOV</div><div style="font-size:20px;font-weight:800">${fv(s26.aov||0)}</div></div>
-          </div>
-        </div>
+        <div style="background:var(--bll);border-radius:10px;padding:14px"><div style="font-size:11px;font-weight:700;color:var(--bl);margin-bottom:8px">📦 2025</div><div style="display:flex;gap:14px;font-family:var(--mn)"><div><div style="font-size:9px;color:var(--tx2)">BILLS</div><div style="font-size:20px;font-weight:800">${fn(s25.bills||0)}</div></div><div><div style="font-size:9px;color:var(--tx2)">DS</div><div style="font-size:20px;font-weight:800">${fv(s25.revenue||0)}</div></div><div><div style="font-size:9px;color:var(--tx2)">AOV</div><div style="font-size:20px;font-weight:800">${fv(s25.aov||0)}</div></div></div></div>
+        <div style="background:var(--gl);border-radius:10px;padding:14px"><div style="font-size:11px;font-weight:700;color:var(--gr);margin-bottom:8px">📦 2026</div><div style="display:flex;gap:14px;font-family:var(--mn)"><div><div style="font-size:9px;color:var(--tx2)">BILLS</div><div style="font-size:20px;font-weight:800">${fn(s26.bills||0)}</div></div><div><div style="font-size:9px;color:var(--tx2)">DS</div><div style="font-size:20px;font-weight:800">${fv(s26.revenue||0)}</div></div><div><div style="font-size:9px;color:var(--tx2)">AOV</div><div style="font-size:20px;font-weight:800">${fv(s26.aov||0)}</div></div></div></div>
       </div>
       <div style="font-weight:700;font-size:12px;color:var(--tx2);margin-bottom:8px">20 giao dịch gần nhất</div>
-      <div style="overflow-x:auto"><table>
-        <thead><tr><th>Thời gian</th><th>Số HĐ</th><th>Chi nhánh</th><th style="text-align:right">Giá trị</th><th>Năm</th></tr></thead>
-        <tbody>${(d.recent_transactions||[]).map(tx=>`<tr>
-          <td style="font-family:var(--mn);color:var(--tx2);font-size:11px">${(tx.EventTime||'').substring(0,16)}</td>
-          <td style="font-family:var(--mn);font-size:11px">${tx.Document_No}</td>
-          <td>${tx.Store_Name||tx.Store_No}</td>
-          <td style="text-align:right;font-weight:700;color:var(--gr);font-family:var(--mn)">${fv(tx.Total_Amount)}</td>
-          <td style="font-family:var(--mn);color:var(--tx2)">${tx.source_year}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`;
+      <div style="overflow-x:auto"><table><thead><tr><th>Thời gian</th><th>Số HĐ</th><th>Chi nhánh</th><th style="text-align:right">Giá trị</th></tr></thead>
+      <tbody>${(d.recent_transactions||[]).map(tx=>`<tr><td style="font-family:var(--mn);color:var(--tx2);font-size:11px">${(tx.EventTime||'').substring(0,16)}</td><td style="font-family:var(--mn);font-size:11px">${tx.Document_No}</td><td>${tx.Store_Name||tx.Store_No}</td><td style="text-align:right;font-weight:700;color:var(--gr);font-family:var(--mn)">${fv(tx.Total_Amount)}</td></tr>`).join('')}</tbody></table></div>`;
   }catch(e){toast('Lỗi: '+e.message,'err');}
-  // done
 }
 document.addEventListener('click',e=>{if(!e.target.closest('#srchInp')&&!e.target.closest('#srchDrop'))G('srchDrop').style.display='none';});
 
 // ══════════════════════════════════════════════════════════
 //  ADVANCED FILTER
 // ══════════════════════════════════════════════════════════
-function buildFilterParams(){
-  const p={};
-  const tier=G('fTier')?.value; if(tier) p.hang_the=tier;
-  const sts=G('fStatus')?.value; if(sts) p.trang_thai=sts;
-  const br=G('fBranch')?.value; if(br) p.chi_nhanh=br;
-  const dMin=G('fDstlMin')?.value; if(dMin) p.dstl_min=dMin;
-  const dMax=G('fDstlMax')?.value; if(dMax) p.dstl_max=dMax;
-  const kw=G('fKeyword')?.value; if(kw) p.q=kw;
-  return p;
-}
-
 function buildSqlPreview(p){
   const w=[];
-  if(p.hang_the) w.push(`<span style="color:#c084fc">HangThe</span> = '<span style="color:#86efac">${p.hang_the}</span>'`);
-  if(p.trang_thai) w.push(`<span style="color:#c084fc">TrangThai</span> = '<span style="color:#86efac">${p.trang_thai}</span>'`);
-  if(p.chi_nhanh) w.push(`<span style="color:#c084fc">ChiNhanhTaoThe</span> = '<span style="color:#86efac">${p.chi_nhanh}</span>'`);
-  if(p.dstl_min) w.push(`<span style="color:#c084fc">DSTL_2026</span> &ge; <span style="color:#fde68a">${fn(+p.dstl_min)}</span>`);
-  if(p.dstl_max) w.push(`<span style="color:#c084fc">DSTL_2026</span> &le; <span style="color:#fde68a">${fn(+p.dstl_max)}</span>`);
-  if(p.q) w.push(`<span style="color:#c084fc">Keyword</span> LIKE '<span style="color:#86efac">%${p.q}%</span>'`);
+  if(p.hang_the)  w.push(`<span style="color:#c084fc">HangThe</span>='<span style="color:#86efac">${p.hang_the}</span>'`);
+  if(p.trang_thai)w.push(`<span style="color:#c084fc">TrangThai</span>='<span style="color:#86efac">${p.trang_thai}</span>'`);
+  if(p.chi_nhanh) w.push(`<span style="color:#c084fc">ChiNhanh</span>='<span style="color:#86efac">${p.chi_nhanh}</span>'`);
+  if(p.dstl_min)  w.push(`<span style="color:#c084fc">DSTL</span>≥<span style="color:#fde68a">${fn(+p.dstl_min)}</span>`);
+  if(p.dstl_max)  w.push(`<span style="color:#c084fc">DSTL</span>≤<span style="color:#fde68a">${fn(+p.dstl_max)}</span>`);
+  if(p.q)         w.push(`<span style="color:#c084fc">Keyword</span> LIKE '<span style="color:#86efac">%${p.q}%</span>'`);
   const box=G('sqlPreview');
   if(!w.length){box.style.display='none';return;}
   box.style.display='block';
   box.innerHTML=`<span style="color:#7dd3fc">SELECT</span> * <span style="color:#7dd3fc">FROM</span> customers\n<span style="color:#7dd3fc">WHERE</span> ${w.join('\n  <span style="color:#7dd3fc">AND</span> ')}`;
 }
-
 async function runFilter(){
-  filterParams=buildFilterParams(); filterOffset=0; filterData=[];
+  filterParams={}; filterOffset=0; filterData=[];
+  const tier=G('fTier')?.value;    if(tier)  filterParams.hang_the=tier;
+  const sts=G('fStatus')?.value;   if(sts)   filterParams.trang_thai=sts;
+  const br=G('fBranch')?.value;    if(br)    filterParams.chi_nhanh=br;
+  const dMin=G('fDstlMin')?.value; if(dMin)  filterParams.dstl_min=dMin;
+  const dMax=G('fDstlMax')?.value; if(dMax)  filterParams.dstl_max=dMax;
+  const kw=G('fKeyword')?.value;   if(kw)    filterParams.q=kw;
   buildSqlPreview(filterParams);
   await fetchFilterPage(true);
 }
-
 async function fetchFilterPage(reset=false){
-  // loading inline
   try{
     const ps=new URLSearchParams({...filterParams,limit:2000,offset:filterOffset});
-    const r=await api(`/api/customers/filter?${ps}`,30000);
+    const r=await api(`/api/v2/customers/filter?${ps}`,30000);
     if(reset) filterData=r.data; else filterData=[...filterData,...r.data];
     const total=r.total, shown=filterData.length;
-    G('filterCnt').textContent=`${T('filter_results')}: ${fn(shown)} / ${fn(total)} KH`;
+    G('filterCnt').textContent=`${fn(shown)} / ${fn(total)} KH`;
     G('btnFltXlsx').style.display=total?'':'none';
     G('btnFltCsv').style.display=total?'':'none';
     G('btnFilterMore').style.display=shown<total?'':'none';
     G('btnFilterMore').textContent=`⬇ Tải thêm (còn ${fn(total-shown)})`;
     G('filterResult').classList.remove('hidden');
-    renderFilterTable(filterData);
+    const cols=['MaKH','KhachHang','PhoneNo','HangThe','TrangThai','DSTL_2026','ChiNhanhTaoThe','ChiNhanhMuaGanNhat','ChiNhanhMuaNhieuNhat','NgayTaoThe'];
+    G('filterTbl').innerHTML=`<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${filterData.map(r=>`<tr>${cols.map(c=>{const v=r[c];const em=v==null||v==='';return `<td class="${em?'tbl-em':typeof v==='number'?'tbl-num':''}">${em?'—':String(v)}</td>`;}).join('')}</tr>`).join('')}</tbody></table>`;
     G('filterNote').textContent=shown<total?`Hiển thị ${fn(shown)}/${fn(total)} — Xuất để tải toàn bộ`:'';
     toast(`✓ ${fn(total)} KH`);
   }catch(e){toast('Lỗi lọc: '+e.message,'err');}
-  // done
 }
-
-async function loadMoreFilter(){ filterOffset+=2000; await fetchFilterPage(false); }
-
-function renderFilterTable(data){
-  const cols=['MaKH','KhachHang','PhoneNo','HangThe','TrangThai','DSTL_2026','ChiNhanhTaoThe','ChiNhanhMuaGanNhat','ChiNhanhMuaNhieuNhat','NgayTaoThe'];
-  G('filterTbl').innerHTML=`<table>
-    <thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
-    <tbody>${data.map(r=>`<tr>${cols.map(c=>{const v=r[c];const em=v==null||v==='';
-      return `<td class="${em?'tbl-em':typeof v==='number'?'tbl-num':''}">${em?'—':String(v)}</td>`;
-    }).join('')}</tr>`).join('')}</tbody>
-  </table>`;
-}
-
+async function loadMoreFilter(){filterOffset+=2000;await fetchFilterPage(false);}
 function resetFilter(){
   ['fTier','fStatus'].forEach(id=>{const el=G(id);if(el)el.value='';});
   ['fBranch','fDstlMin','fDstlMax','fKeyword'].forEach(id=>{const el=G(id);if(el)el.value='';});
-  G('sqlPreview').style.display='none';
-  G('filterResult').classList.add('hidden');
+  G('sqlPreview').style.display='none'; G('filterResult').classList.add('hidden');
   G('btnFltXlsx').style.display='none'; G('btnFltCsv').style.display='none';
   filterData=[];filterParams={};filterOffset=0;
 }
-
 function exportFilter(fmt){
   const ps=new URLSearchParams({...filterParams,fmt});
-  const url=`${API}/api/customers/filter-export?${ps}&t=${encodeURIComponent(TOKEN)}`;
-  const a=document.createElement('a');a.href=url;a.download=`khachhang.${fmt}`;a.click();
-  toast(`⬇ Đang tải ${fmt.toUpperCase()}...`);
+  const a=document.createElement('a');
+  a.href=`${API}/api/v2/customers/filter-export?${ps}&t=${encodeURIComponent(TOKEN)}`;
+  a.download=`khachhang.${fmt}`;a.click();
+  toast('⬇ Đang tải '+fmt.toUpperCase()+'...');
 }
 
 // ══════════════════════════════════════════════════════════
 //  SEGMENT BUILDER
 // ══════════════════════════════════════════════════════════
-let segData=[], segParams={}, segOffset=0;
 async function runSegment(){
-  segOffset=0; segData=[]; segParams={};
-  const tier=G('segTier').value; if(tier) segParams.hang_the=tier;
-  const sts=G('segSts').value; if(sts) segParams.trang_thai=sts;
-  const b25=G('segB25').value; if(b25) segParams.mua_2025=b25;
-  const b26=G('segB26').value; if(b26) segParams.mua_2026=b26;
-  const dstl=G('segDstl').value; if(dstl) segParams.dstl_min=dstl;
+  segOffset=0;segData=[];segParams={};
+  const tier=G('segTier').value;if(tier)segParams.hang_the=tier;
+  const sts=G('segSts').value;if(sts)segParams.trang_thai=sts;
+  const b25=G('segB25').value;if(b25)segParams.mua_2025=b25;
+  const b26=G('segB26').value;if(b26)segParams.mua_2026=b26;
+  const dstl=G('segDstl').value;if(dstl)segParams.dstl_min=dstl;
   await fetchSegPage(true);
 }
 async function fetchSegPage(reset=false){
-  // loading inline
   try{
     const ps=new URLSearchParams({...segParams,limit:2000,offset:segOffset});
     const r=await api(`/api/segment/query?${ps}`,30000);
-    if(reset) segData=r.data; else segData=[...segData,...r.data];
+    if(reset)segData=r.data;else segData=[...segData,...r.data];
     const total=r.total,shown=segData.length;
     G('segCnt').textContent=`${fn(shown)} / ${fn(total)} KH`;
     G('btnExport').style.display=total?'':'none';
     G('btnMore').style.display=shown<total?'':'none';
     G('btnMore').textContent=`⬇ Tải thêm (còn ${fn(total-shown)})`;
-    G('segNote').textContent=shown<total?`Hiển thị ${fn(shown)}/${fn(total)} — Xuất CSV để tải toàn bộ`:'';
+    G('segNote').textContent=shown<total?`Hiển thị ${fn(shown)}/${fn(total)}`:'';
     G('segResult').classList.remove('hidden');
     const cols=['MaKH','KhachHang','PhoneNo','HangThe','TrangThai','DSTL_2026','ChiNhanhTaoThe'];
-    G('segTbl').innerHTML=`<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
-      <tbody>${segData.map(r=>`<tr>${cols.map(c=>`<td>${r[c]!=null?r[c]:'—'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    G('segTbl').innerHTML=`<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${segData.map(r=>`<tr>${cols.map(c=>`<td>${r[c]!=null?r[c]:'—'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     toast(`✓ ${fn(total)} KH`);
-  }catch(e){toast('Lỗi: '+e.message,'err');}
-  // done
+  }catch(e){toast('Lỗi segment: '+e.message,'err');}
 }
-async function loadMoreSeg(){ segOffset+=2000; await fetchSegPage(false); }
+async function loadMoreSeg(){segOffset+=2000;await fetchSegPage(false);}
 function exportSegment(){
   const ps=new URLSearchParams(segParams);
   const a=document.createElement('a');
@@ -1221,54 +1142,50 @@ function exportSegment(){
 }
 
 // ══════════════════════════════════════════════════════════
-//  UTILS
+//  TOAST & ERROR
 // ══════════════════════════════════════════════════════════
-function G(id){return document.getElementById(id);}
-function fn(n){return n!=null?Number(n).toLocaleString('vi-VN'):'—';}
-function fv(n){
-  if(n==null||n===undefined)return'—';
-  n=Number(n);
-  if(n>=1e9)return(n/1e9).toFixed(2)+'B';
-  if(n>=1e6)return(n/1e6).toFixed(1)+'M';
-  if(n>=1e3)return(n/1e3).toFixed(0)+'K';
-  return n.toLocaleString('vi-VN',{maximumFractionDigits:0});
-}
-const COPTS=(yLabel='')=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index',intersect:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'},title:{display:!!yLabel,text:yLabel}}}});
-function dc(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
-function showOv(t,s){
-  // Non-blocking — chỉ update cache bar text, KHÔNG hiện overlay chặn click
-  G('cacheTxt').textContent='⏳ '+t+(s?' — '+s:'');
-}
-function hideOv(){
-  // Restore cache bar
-  pollCache();
-}
 let _tt;
 function toast(msg,type=''){
   document.querySelector('.toast')?.remove();
-  const el=document.createElement('div');el.className='toast'+(type?' '+type:'');el.textContent=msg;
-  document.body.appendChild(el);clearTimeout(_tt);_tt=setTimeout(()=>el?.remove(),3500);
+  const el=document.createElement('div');
+  el.className='toast'+(type?' '+type:'');el.textContent=msg;
+  document.body.appendChild(el);
+  clearTimeout(_tt);_tt=setTimeout(()=>el?.remove(),3500);
 }
 function showErr(pgId,msg,fnName){
+  DBG.err(`showErr[${pgId}]: ${msg}`);
   const el=G(pgId);if(!el)return;
-  const id='err-'+pgId; document.getElementById(id)?.remove();
+  const id='err-'+pgId;document.getElementById(id)?.remove();
   const div=document.createElement('div');div.id=id;div.className='err-p';
-  div.innerHTML=`<div style="font-size:18px">⚠️</div><div><div style="font-size:13px;font-weight:700;color:var(--rd);margin-bottom:4px">Lỗi tải dữ liệu</div><div style="font-size:12px;color:var(--tx2);font-family:var(--mn)">${msg}</div><button onclick="document.getElementById('${id}').remove();${fnName}()">↻ Thử lại</button></div>`;
+  div.innerHTML=`<div style="font-size:18px">⚠️</div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--rd);margin-bottom:4px">Lỗi tải dữ liệu</div>
+      <div style="font-size:12px;color:var(--tx2);font-family:var(--mn)">${msg}</div>
+      <button onclick="document.getElementById('${id}').remove();${fnName}()">↻ Thử lại</button>
+    </div>`;
   el.prepend(div);
 }
 
 // ══════════════════════════════════════════════════════════
-//  INIT
+//  INIT — chạy ngay, không block gì cả
 // ══════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded',()=>{
+  DBG.init();
+  DBG.ok('DOM ready — init bắt đầu');
+
   // Set default RFM date
   const today=new Date().toISOString().split('T')[0];
-  const rfmTo=G('rfmTo'); if(rfmTo) rfmTo.value=today;
-  // Poll cache status — KHÔNG await, chạy nền
+  const rfmTo=G('rfmTo');if(rfmTo)rfmTo.value=today;
+
+  // Poll cache — không await
   pollCache();
-  setInterval(pollCache, 12000);
-  // Load trang ngay lập tức — KHÔNG chờ API
+  setInterval(pollCache,15000);
+
+  // Load trang overview NGAY — không chờ gì
+  DBG.log('Gọi loadPage overview...');
   loadPage('overview');
+
+  DBG.ok('Init xong — UI sẵn sàng');
 });
 </script>
 </body>

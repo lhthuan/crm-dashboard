@@ -595,6 +595,7 @@ async function api(path, ms=20000){
 function showOv(t){ G('cacheTxt').textContent='⏳ '+t; }
 function hideOv(){ pollCache(); }
 
+let _prevCacheReady = false;
 async function pollCache(){
   try{
     const ctrl=new AbortController();
@@ -603,16 +604,25 @@ async function pollCache(){
     const bar=G('cacheBar'), txt=G('cacheTxt');
     if(r.ready){
       bar.className='cache-bar';
-      txt.textContent=`✓ Cache sẵn sàng — ${r.keys_cached?.length||0} datasets`;
+      txt.textContent=`✓ Cache sẵn sàng — ${r.keys_cached?.length||0} datasets · ${new Date().toLocaleTimeString('vi-VN')}`;
       DBG.ok('Cache ready: '+r.keys_cached?.length+' keys');
+      // Auto-reload nếu cache vừa chuyển sang ready
+      if(!_prevCacheReady){
+        DBG.ok('Cache vừa ready → auto-reload trang hiện tại');
+        DATA[curPage]=null; // clear cache để force reload
+        loadPage(curPage);
+      }
+      _prevCacheReady = true;
     }else{
       bar.className='cache-bar bld';
-      txt.textContent=`⏳ Cache building (${r.keys_cached?.length||0}/16)...`;
+      txt.textContent=`⏳ Cache building (${r.keys_cached?.length||0}/16)... tự động tải khi xong`;
+      _prevCacheReady = false;
     }
   }catch(e){
     G('cacheBar').className='cache-bar bld';
-    G('cacheTxt').textContent='⚠ API offline: '+e.message;
+    G('cacheTxt').textContent='⚠ API offline — tự retry...';
     DBG.err('pollCache: '+e.message);
+    _prevCacheReady = false;
   }
 }
 
@@ -663,28 +673,54 @@ function loadPage(name){
 // ══════════════════════════════════════════════════════════
 async function loadOverview(){
   DBG.log('loadOverview start');
-  setCardLoading('kpiGrid','Đang tải KPI...');
+
+  // Check cache status first — dùng timeout ngắn 5s
+  let cacheReady = false;
   try{
-    const[kpi,rev,churn,newret,mem]=await Promise.all([
-      api('/api/kpi/overview',20000),
-      api('/api/revenue/monthly',20000),
-      api('/api/churn/summary',20000),
-      api('/api/stats/new-vs-returning',20000),
-      api('/api/membership/distribution',20000),
-    ]);
-    DATA.kpi=kpi;DATA.rev=rev;DATA.churn=churn;DATA.newret=newret;DATA.memDist=mem;
-    renderKPIs(kpi);
-    renderRevenueCompare(rev,'chRevOv');
-    renderTierPie(mem,'chTierOv');
-    renderNewRet(newret);
-    renderChurnBars(churn,'churnSumBody');
+    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),5000);
+    const cs=await fetch(API+'/api/cache/status',{signal:ctrl.signal}).then(r=>r.json());
+    cacheReady = cs.ready===true;
+    DBG.log('Cache: '+cacheReady+' ('+( cs.keys_cached?.length||0)+'/16)');
+  }catch(e){ DBG.warn('Cache check fail: '+e.message); }
+
+  const TO = cacheReady ? 15000 : 50000;
+  setCardLoading('kpiGrid', cacheReady
+    ? 'Đang tải...'
+    : '⏳ Cache chưa sẵn sàng — đang query trực tiếp, chờ 30–60s...');
+
+  // Promise.allSettled — 1 fail không giết tất cả
+  const R = await Promise.allSettled([
+    api('/api/kpi/overview',            TO),
+    api('/api/revenue/monthly',         TO),
+    api('/api/churn/summary',           TO),
+    api('/api/stats/new-vs-returning',  TO),
+    api('/api/membership/distribution', TO),
+  ]);
+  const[kpiR,revR,churnR,nrR,memR] = R;
+  let ok=0, fail=0;
+  if(kpiR.status==='fulfilled'){DATA.kpi=kpiR.value;ok++;}else{DBG.err('kpi: '+kpiR.reason?.message);fail++;}
+  if(revR.status==='fulfilled'){DATA.rev=revR.value;ok++;}else{DBG.err('rev: '+revR.reason?.message);fail++;}
+  if(churnR.status==='fulfilled'){DATA.churn=churnR.value;ok++;}else{DBG.err('churn: '+churnR.reason?.message);fail++;}
+  if(nrR.status==='fulfilled'){DATA.newret=nrR.value;ok++;}else{DBG.err('newret: '+nrR.reason?.message);fail++;}
+  if(memR.status==='fulfilled'){DATA.memDist=memR.value;ok++;}else{DBG.err('mem: '+memR.reason?.message);fail++;}
+
+  DBG.log('loadOverview: '+ok+' OK / '+fail+' fail');
+
+  // Render những gì có — partial OK
+  if(DATA.kpi)     renderKPIs(DATA.kpi);     else G('kpiGrid').innerHTML='';
+  if(DATA.rev)     renderRevenueCompare(DATA.rev,'chRevOv');
+  if(DATA.memDist) renderTierPie(DATA.memDist,'chTierOv');
+  if(DATA.newret)  renderNewRet(DATA.newret);
+  if(DATA.churn)   renderChurnBars(DATA.churn,'churnSumBody');
+
+  if(fail===0){
     G('tsLbl').textContent='↻ '+new Date().toLocaleTimeString('vi-VN');
     DBG.ok('loadOverview done');
     toast('✓ Dashboard đã tải');
-  }catch(e){
-    DBG.err('loadOverview: '+e.message);
-    G('kpiGrid').innerHTML='';
-    showErr('pgOverview',e.message,'loadOverview');
+  } else if(ok>0){
+    toast('⚠ '+ok+'/5 module OK, '+fail+' lỗi — Làm mới để thử lại','warn');
+  } else {
+    showErr('pgOverview','Tất cả '+fail+' endpoints thất bại — API chưa sẵn sàng hoặc OOM','loadOverview');
   }
 }
 

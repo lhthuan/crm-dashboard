@@ -55,11 +55,9 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);min-height:100vh
 .rf-btn{padding:5px 12px;background:var(--gl);color:var(--gr);border:1px solid rgba(22,163,74,.25);border-radius:7px;font-family:var(--fn);font-size:12px;font-weight:700;cursor:pointer}
 .ts-lbl{font-size:11px;color:var(--tx3);font-family:var(--mn)}
 .content{padding:18px 22px;flex:1}
-/* LOADING */
-.ov{position:fixed;inset:0;background:rgba(15,31,46,.65);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(3px)}
-.ov-card{background:var(--wh);border-radius:14px;padding:28px 36px;text-align:center;min-width:280px}
-.ov-spin{width:40px;height:40px;border:3px solid var(--bd);border-top-color:var(--gr);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
-.ov-ttl{font-weight:700;font-size:14px;margin-bottom:4px}.ov-sub{font-size:11px;color:var(--tx2);font-family:var(--mn)}
+/* INLINE LOADING — thay cho overlay chặn click */
+.card-loading{padding:40px;text-align:center;color:var(--tx3);font-size:13px}
+.card-loading::before{content:'';display:inline-block;width:20px;height:20px;border:2px solid var(--bd);border-top-color:var(--gr);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* CARD */
 .card{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:14px;overflow:hidden}
@@ -155,13 +153,7 @@ tr:hover td{background:#f8fffe}
 </style>
 </head>
 <body>
-<div class="ov hidden" id="ov">
-  <div class="ov-card">
-    <div class="ov-spin"></div>
-    <div class="ov-ttl" id="ovT">Đang tải...</div>
-    <div class="ov-sub" id="ovS"></div>
-  </div>
-</div>
+<!-- overlay removed - non-blocking -->
 
 <!-- SIDEBAR -->
 <aside class="sb">
@@ -555,13 +547,17 @@ async function api(path){
   const sep=path.includes('?')?'&':'?';
   const url=API+path+sep+'t='+encodeURIComponent(TOKEN);
   const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),58000);
+  const timer=setTimeout(()=>ctrl.abort(),15000); // 15s timeout
   try{
     const r=await fetch(url,{signal:ctrl.signal});
     clearTimeout(timer);
     if(!r.ok){let m=`HTTP ${r.status}`;try{const j=await r.json();m=j.detail||m;}catch(e){}throw new Error(m);}
     return await r.json();
-  }catch(e){clearTimeout(timer);throw e.name==='AbortError'?new Error('Timeout >58s — thử lại sau'):e;}
+  }catch(e){
+    clearTimeout(timer);
+    if(e.name==='AbortError') throw new Error('Timeout 15s — API đang chậm, thử lại sau');
+    throw e;
+  }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -624,7 +620,7 @@ async function pollCache(){
 //  PAGE LOADERS
 // ══════════════════════════════════════════════════════════
 async function loadOverview(){
-  showOv('Đang tải CEO Dashboard...','');
+  G('kpiGrid').innerHTML='<div class="card-loading" style="grid-column:1/-1">Đang tải dữ liệu...</div>';
   try{
     const[kpi,rev,churn,newret,memDist]=await Promise.all([
       api('/api/kpi/overview'), api('/api/revenue/monthly'),
@@ -639,12 +635,14 @@ async function loadOverview(){
     renderChurnBars(churn,'churnSumBody');
     G('tsLbl').textContent='↻ '+new Date().toLocaleTimeString('vi-VN');
     toast('✓ Dashboard đã tải');
-  }catch(e){showErr('pgOverview',e.message,'loadOverview');}
-  hideOv();
+  }catch(e){
+    G('kpiGrid').innerHTML='';
+    showErr('pgOverview',e.message,'loadOverview');
+  }
 }
 
 async function loadRevenue(){
-  showOv('Đang tải Revenue...','');
+  // loading inline
   try{
     if(!DATA.rev)  DATA.rev   =await api('/api/revenue/monthly');
     if(!DATA.aov25) DATA.aov25=await api('/api/aov/distribution?year=2025');
@@ -653,11 +651,11 @@ async function loadRevenue(){
     if(!DATA.frq26) DATA.frq26=await api('/api/frequency/distribution?year=2026');
     renderRevenue(); renderAov(); renderFreq();
   }catch(e){showErr('pgRevenue',e.message,'loadRevenue');}
-  hideOv();
+  // done
 }
 
 async function loadMembership(){
-  showOv('Đang tải Membership...','');
+  // loading inline
   try{
     if(!DATA.memDist) DATA.memDist=await api('/api/membership/distribution');
     if(!DATA.memTier) DATA.memTier=await api('/api/membership/revenue-by-tier');
@@ -665,12 +663,12 @@ async function loadMembership(){
     renderMemRev(DATA.memDist);
     renderTierAOV(DATA.memTier);
   }catch(e){showErr('pgMembership',e.message,'loadMembership');}
-  hideOv();
+  // done
 }
 
 async function loadRFM(){
   const from=G('rfmFrom')?.value||''; const to=G('rfmTo')?.value||'';
-  showOv('Đang tính RFM...','Có thể mất 20–60 giây lần đầu');
+  // loading inline
   try{
     let path='/api/rfm/segments';
     if(from||to){
@@ -681,11 +679,11 @@ async function loadRFM(){
     const data=await api(path);
     renderRFM(data);
   }catch(e){showErr('pgRfm',e.message,'loadRFM');}
-  hideOv();
+  // done
 }
 
 async function loadChurn(){
-  showOv('Đang tải Churn...','');
+  // loading inline
   try{
     if(!DATA.churn)      DATA.churn     =await api('/api/churn/summary');
     if(!DATA.churnMon)   DATA.churnMon  =await api('/api/churn/monthly-pattern');
@@ -696,7 +694,7 @@ async function loadChurn(){
     renderChurnByTier(DATA.churnTier);
     renderActiveTierChart();
   }catch(e){showErr('pgChurn',e.message,'loadChurn');}
-  hideOv();
+  // done
 }
 
 function switchChurnTab(tab,btn){
@@ -715,16 +713,16 @@ function switchSearchTab(tab,btn){
 }
 
 async function loadCohort(){
-  showOv('Đang tải Cohort Matrix...','10–30 giây...');
+  // loading inline
   try{
     if(!DATA.cohort) DATA.cohort=await api('/api/cohort/retention');
     renderCohort(DATA.cohort);
   }catch(e){showErr('pgCohort',e.message,'loadCohort');}
-  hideOv();
+  // done
 }
 
 async function loadBranches(){
-  showOv('Đang tải chi nhánh...','');
+  // loading inline
   try{
     const yr=G('selBrYr')?.value||0, mon=G('selBrMon')?.value||0;
     const key=`br${yr}_${mon}`;
@@ -732,7 +730,7 @@ async function loadBranches(){
     renderBranchChart(DATA[key]);
     renderBranchTable(DATA[key]);
   }catch(e){showErr('pgBranches',e.message,'loadBranches');}
-  hideOv();
+  // done
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1029,7 +1027,7 @@ function onSearch(){
 
 async function loadKHDetail(makh){
   G('srchDrop').style.display='none';
-  showOv('Đang tải hồ sơ KH...','');
+  // loading inline
   try{
     const d=await api(`/api/customers/detail/${encodeURIComponent(makh)}`);
     G('detailName').textContent=d.info.KhachHang||makh;
@@ -1076,7 +1074,7 @@ async function loadKHDetail(makh){
         </tr>`).join('')}</tbody>
       </table></div>`;
   }catch(e){toast('Lỗi: '+e.message,'err');}
-  hideOv();
+  // done
 }
 document.addEventListener('click',e=>{if(!e.target.closest('#srchInp')&&!e.target.closest('#srchDrop'))G('srchDrop').style.display='none';});
 
@@ -1115,7 +1113,7 @@ async function runFilter(){
 }
 
 async function fetchFilterPage(reset=false){
-  showOv('Đang lọc...','');
+  // loading inline
   try{
     const ps=new URLSearchParams({...filterParams,limit:2000,offset:filterOffset});
     const r=await api(`/api/customers/filter?${ps}`);
@@ -1131,7 +1129,7 @@ async function fetchFilterPage(reset=false){
     G('filterNote').textContent=shown<total?`Hiển thị ${fn(shown)}/${fn(total)} — Xuất để tải toàn bộ`:'';
     toast(`✓ ${fn(total)} KH`);
   }catch(e){toast('Lỗi lọc: '+e.message,'err');}
-  hideOv();
+  // done
 }
 
 async function loadMoreFilter(){ filterOffset+=2000; await fetchFilterPage(false); }
@@ -1176,7 +1174,7 @@ async function runSegment(){
   await fetchSegPage(true);
 }
 async function fetchSegPage(reset=false){
-  showOv('Đang lọc segment...','');
+  // loading inline
   try{
     const ps=new URLSearchParams({...segParams,limit:2000,offset:segOffset});
     const r=await api(`/api/segment/query?${ps}`);
@@ -1193,7 +1191,7 @@ async function fetchSegPage(reset=false){
       <tbody>${segData.map(r=>`<tr>${cols.map(c=>`<td>${r[c]!=null?r[c]:'—'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     toast(`✓ ${fn(total)} KH`);
   }catch(e){toast('Lỗi: '+e.message,'err');}
-  hideOv();
+  // done
 }
 async function loadMoreSeg(){ segOffset+=2000; await fetchSegPage(false); }
 function exportSegment(){
@@ -1218,8 +1216,14 @@ function fv(n){
 }
 const COPTS=(yLabel='')=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index',intersect:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'},title:{display:!!yLabel,text:yLabel}}}});
 function dc(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
-function showOv(t,s){G('ovT').textContent=t;G('ovS').textContent=s;G('ov').classList.remove('hidden');}
-function hideOv(){G('ov').classList.add('hidden');}
+function showOv(t,s){
+  // Non-blocking — chỉ update cache bar text, KHÔNG hiện overlay chặn click
+  G('cacheTxt').textContent='⏳ '+t+(s?' — '+s:'');
+}
+function hideOv(){
+  // Restore cache bar
+  pollCache();
+}
 let _tt;
 function toast(msg,type=''){
   document.querySelector('.toast')?.remove();
@@ -1237,13 +1241,14 @@ function showErr(pgId,msg,fnName){
 // ══════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded',async()=>{
-  // Set default RFM date to today
+window.addEventListener('DOMContentLoaded',()=>{
+  // Set default RFM date
   const today=new Date().toISOString().split('T')[0];
-  G('rfmTo').value=today;
-  // Poll cache
-  setInterval(pollCache,12000);
-  await pollCache();
+  const rfmTo=G('rfmTo'); if(rfmTo) rfmTo.value=today;
+  // Poll cache status — KHÔNG await, chạy nền
+  pollCache();
+  setInterval(pollCache, 12000);
+  // Load trang ngay lập tức — KHÔNG chờ API
   loadPage('overview');
 });
 </script>

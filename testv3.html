@@ -543,19 +543,23 @@ let sortSt={col:null,dir:'asc'};
 // ══════════════════════════════════════════════════════════
 //  API
 // ══════════════════════════════════════════════════════════
-async function api(path){
+async function api(path, timeoutMs=20000){
   const sep=path.includes('?')?'&':'?';
   const url=API+path+sep+'t='+encodeURIComponent(TOKEN);
   const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),15000); // 15s timeout
+  const timer=setTimeout(()=>ctrl.abort(), timeoutMs);
   try{
     const r=await fetch(url,{signal:ctrl.signal});
     clearTimeout(timer);
-    if(!r.ok){let m=`HTTP ${r.status}`;try{const j=await r.json();m=j.detail||m;}catch(e){}throw new Error(m);}
+    if(!r.ok){
+      let m=`HTTP ${r.status}`;
+      try{const j=await r.json();m=j.detail||m;}catch(e){}
+      throw new Error(m);
+    }
     return await r.json();
   }catch(e){
     clearTimeout(timer);
-    if(e.name==='AbortError') throw new Error('Timeout 15s — API đang chậm, thử lại sau');
+    if(e.name==='AbortError') throw new Error(`Timeout ${timeoutMs/1000}s — query nặng, thử lại`);
     throw e;
   }
 }
@@ -622,10 +626,13 @@ async function pollCache(){
 async function loadOverview(){
   G('kpiGrid').innerHTML='<div class="card-loading" style="grid-column:1/-1">Đang tải dữ liệu...</div>';
   try{
+    // Overview dùng cached endpoints → nhanh 5-15s
     const[kpi,rev,churn,newret,memDist]=await Promise.all([
-      api('/api/kpi/overview'), api('/api/revenue/monthly'),
-      api('/api/churn/summary'), api('/api/stats/new-vs-returning'),
-      api('/api/membership/distribution'),
+      api('/api/kpi/overview',      20000),
+      api('/api/revenue/monthly',   20000),
+      api('/api/churn/summary',     20000),
+      api('/api/stats/new-vs-returning', 20000),
+      api('/api/membership/distribution',20000),
     ]);
     DATA.kpi=kpi; DATA.rev=rev; DATA.churn=churn; DATA.newret=newret; DATA.memDist=memDist;
     renderKPIs(kpi);
@@ -644,11 +651,11 @@ async function loadOverview(){
 async function loadRevenue(){
   // loading inline
   try{
-    if(!DATA.rev)  DATA.rev   =await api('/api/revenue/monthly');
-    if(!DATA.aov25) DATA.aov25=await api('/api/aov/distribution?year=2025');
-    if(!DATA.aov26) DATA.aov26=await api('/api/aov/distribution?year=2026');
-    if(!DATA.frq25) DATA.frq25=await api('/api/frequency/distribution?year=2025');
-    if(!DATA.frq26) DATA.frq26=await api('/api/frequency/distribution?year=2026');
+    if(!DATA.rev)  DATA.rev   =await api('/api/revenue/monthly',20000);
+    if(!DATA.aov25) DATA.aov25=await api('/api/aov/distribution?year=2025',20000);
+    if(!DATA.aov26) DATA.aov26=await api('/api/aov/distribution?year=2026',20000);
+    if(!DATA.frq25) DATA.frq25=await api('/api/frequency/distribution?year=2025',20000);
+    if(!DATA.frq26) DATA.frq26=await api('/api/frequency/distribution?year=2026',20000);
     renderRevenue(); renderAov(); renderFreq();
   }catch(e){showErr('pgRevenue',e.message,'loadRevenue');}
   // done
@@ -657,8 +664,8 @@ async function loadRevenue(){
 async function loadMembership(){
   // loading inline
   try{
-    if(!DATA.memDist) DATA.memDist=await api('/api/membership/distribution');
-    if(!DATA.memTier) DATA.memTier=await api('/api/membership/revenue-by-tier');
+    if(!DATA.memDist) DATA.memDist=await api('/api/membership/distribution',20000);
+    if(!DATA.memTier) DATA.memTier=await api('/api/membership/revenue-by-tier',20000);
     renderTierPie(DATA.memDist,'chMemPie');
     renderMemRev(DATA.memDist);
     renderTierAOV(DATA.memTier);
@@ -668,27 +675,39 @@ async function loadMembership(){
 
 async function loadRFM(){
   const from=G('rfmFrom')?.value||''; const to=G('rfmTo')?.value||'';
-  // loading inline
+  G('rfmGrid').innerHTML=`<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--tx2)">
+    <div style="font-size:28px;margin-bottom:8px">⏳</div>
+    <div style="font-weight:700;margin-bottom:4px">Đang tính RFM — 30–60 giây</div>
+    <div style="font-size:11px;color:var(--tx3);font-family:var(--mn)">NTILE window function trên toàn bộ giao dịch</div>
+  </div>`;
   try{
-    let path='/api/rfm/segments';
-    if(from||to){
-      path='/api/rfm/segments-daterange';
-      if(from) path+='?date_from='+from;
-      if(to)   path+=(from?'&':'?')+'date_to='+to;
-    }
-    const data=await api(path);
+    let path='/api/v2/rfm/segments';
+    const params=[];
+    if(from) params.push('date_from='+from);
+    if(to)   params.push('date_to='+to);
+    if(params.length) path+='?'+params.join('&');
+    const data=await api(path, 65000); // 65s — RFM ~37s theo benchmark
     renderRFM(data);
-  }catch(e){showErr('pgRfm',e.message,'loadRFM');}
-  // done
+    toast('✓ RFM tính xong!');
+  }catch(e){
+    G('rfmGrid').innerHTML='';
+    showErr('pgRfm',e.message,'loadRFM');
+  }
 }
 
 async function loadChurn(){
-  // loading inline
   try{
-    if(!DATA.churn)      DATA.churn     =await api('/api/churn/summary');
-    if(!DATA.churnMon)   DATA.churnMon  =await api('/api/churn/monthly-pattern');
-    if(!DATA.churnTier)  DATA.churnTier =await api('/api/churn/by-tier');
-    if(!DATA.activeTier) DATA.activeTier=await api('/api/active/by-tier-month');
+    if(!DATA.churn)      DATA.churn     =await api('/api/churn/summary',          25000);
+    if(!DATA.churnMon)   DATA.churnMon  =await api('/api/churn/monthly-pattern',  25000);
+    if(!DATA.churnTier)  DATA.churnTier =await api('/api/v2/churn/by-tier',       45000);
+    if(!DATA.activeTier) DATA.activeTier=await api('/api/v2/active/by-tier-month',45000);
+    renderChurnBars(DATA.churn,'churnPatBody');
+    renderChurnMonthly(DATA.churnMon);
+    renderChurnByTier(DATA.churnTier);
+    renderActiveTierChart();
+    toast('✓ Churn data đã tải');
+  }catch(e){showErr('pgChurn',e.message,'loadChurn');}
+}
     renderChurnBars(DATA.churn,'churnPatBody');
     renderChurnMonthly(DATA.churnMon);
     renderChurnByTier(DATA.churnTier);
@@ -715,7 +734,7 @@ function switchSearchTab(tab,btn){
 async function loadCohort(){
   // loading inline
   try{
-    if(!DATA.cohort) DATA.cohort=await api('/api/cohort/retention');
+    if(!DATA.cohort) DATA.cohort=await api('/api/cohort/retention',55000);
     renderCohort(DATA.cohort);
   }catch(e){showErr('pgCohort',e.message,'loadCohort');}
   // done
@@ -726,7 +745,7 @@ async function loadBranches(){
   try{
     const yr=G('selBrYr')?.value||0, mon=G('selBrMon')?.value||0;
     const key=`br${yr}_${mon}`;
-    if(!DATA[key]) DATA[key]=await api(`/api/branches/by-tier?year=${yr}&month=${mon}&top_n=30`);
+    if(!DATA[key]) DATA[key]=await api(`/api/branches/by-tier?year=${yr}&month=${mon}&top_n=30`,45000);
     renderBranchChart(DATA[key]);
     renderBranchTable(DATA[key]);
   }catch(e){showErr('pgBranches',e.message,'loadBranches');}
@@ -1012,7 +1031,7 @@ function onSearch(){
     const q=G('srchInp').value.trim(); const dd=G('srchDrop');
     if(q.length<2){dd.style.display='none';return;}
     try{
-      const data=await api(`/api/customers/search?q=${encodeURIComponent(q)}`);
+      const data=await api(`/api/customers/search?q=${encodeURIComponent(q)}`,10000);
       if(!data.length){dd.innerHTML='<div style="padding:12px;color:var(--tx3);font-style:italic">Không tìm thấy</div>';dd.style.display='block';return;}
       dd.innerHTML=data.map(d=>`<div class="sr-item" onclick="loadKHDetail('${d.MaKH}')">
         <span class="sr-code">${d.MaKH}</span>
@@ -1029,7 +1048,7 @@ async function loadKHDetail(makh){
   G('srchDrop').style.display='none';
   // loading inline
   try{
-    const d=await api(`/api/customers/detail/${encodeURIComponent(makh)}`);
+    const d=await api(`/api/customers/detail/${encodeURIComponent(makh)}`,20000);
     G('detailName').textContent=d.info.KhachHang||makh;
     G('khDetail').classList.remove('hidden');
     const s25=d.stats.find(s=>s.year==2025)||{};
@@ -1116,7 +1135,7 @@ async function fetchFilterPage(reset=false){
   // loading inline
   try{
     const ps=new URLSearchParams({...filterParams,limit:2000,offset:filterOffset});
-    const r=await api(`/api/customers/filter?${ps}`);
+    const r=await api(`/api/customers/filter?${ps}`,30000);
     if(reset) filterData=r.data; else filterData=[...filterData,...r.data];
     const total=r.total, shown=filterData.length;
     G('filterCnt').textContent=`${T('filter_results')}: ${fn(shown)} / ${fn(total)} KH`;
@@ -1177,7 +1196,7 @@ async function fetchSegPage(reset=false){
   // loading inline
   try{
     const ps=new URLSearchParams({...segParams,limit:2000,offset:segOffset});
-    const r=await api(`/api/segment/query?${ps}`);
+    const r=await api(`/api/segment/query?${ps}`,30000);
     if(reset) segData=r.data; else segData=[...segData,...r.data];
     const total=r.total,shown=segData.length;
     G('segCnt').textContent=`${fn(shown)} / ${fn(total)} KH`;

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Diagnostic Tool</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:24px}
+h1{font-size:20px;font-weight:800;color:#f1f5f9;margin-bottom:4px}
+.sub{font-size:12px;color:#64748b;font-family:monospace;margin-bottom:24px}
+
+/* CONFIG */
+.cfg{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px 20px;margin-bottom:20px}
+.cfg-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cfg label{font-size:12px;font-weight:600;color:#94a3b8;white-space:nowrap}
+.cfg input{flex:1;padding:8px 12px;background:#0f172a;border:1px solid #334155;border-radius:7px;color:#f1f5f9;font-family:monospace;font-size:13px;min-width:280px;outline:none}
+.cfg input:focus{border-color:#3b82f6}
+button{padding:8px 18px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-test{background:#3b82f6;color:#fff}.btn-test:hover{background:#2563eb}
+.btn-go{background:#16a34a;color:#fff}.btn-go:hover{background:#15803d}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-gray{background:#334155;color:#94a3b8}.btn-gray:hover{background:#475569;color:#e2e8f0}
+.btn-red{background:#dc2626;color:#fff}
+
+/* STATUS BLOCKS */
+.blk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px}
+.blk{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+.blk::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.blk.ok::before{background:#16a34a}
+.blk.err::before{background:#dc2626}
+.blk.loading::before{background:#f59e0b;animation:blink .8s infinite}
+.blk.idle::before{background:#334155}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.blk-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:6px}
+.blk-val{font-size:22px;font-weight:800;font-family:monospace;line-height:1;margin-bottom:3px}
+.blk-sub{font-size:11px;color:#64748b;font-family:monospace}
+.blk.ok .blk-val{color:#4ade80}
+.blk.err .blk-val{color:#f87171}
+.blk.loading .blk-val{color:#fbbf24}
+
+/* LOG */
+.log-box{background:#0a0f1a;border:1px solid #1e293b;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-family:monospace;font-size:12px;max-height:200px;overflow-y:auto}
+.log-line{margin-bottom:3px;line-height:1.5}
+.log-ok{color:#4ade80}.log-err{color:#f87171}.log-warn{color:#fbbf24}.log-info{color:#60a5fa}.log-dim{color:#475569}
+
+/* FETCH SECTION */
+.fetch-sec{background:#1e293b;border:1px solid #334155;border-radius:10px;overflow:hidden;margin-bottom:20px}
+.fetch-head{padding:12px 18px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fetch-ttl{font-size:14px;font-weight:700;color:#f1f5f9;flex:1}
+.fetch-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ctl-label{font-size:12px;color:#94a3b8}
+select{padding:6px 10px;background:#0f172a;border:1px solid #334155;border-radius:7px;color:#f1f5f9;font-family:monospace;font-size:12px;outline:none;cursor:pointer}
+select:focus{border-color:#3b82f6}
+.fetch-info{padding:10px 18px;background:#0f172a;border-bottom:1px solid #1e293b;font-family:monospace;font-size:12px;color:#64748b;display:flex;gap:20px;flex-wrap:wrap}
+.fi-item span{color:#94a3b8;font-weight:600}
+
+/* TABLE */
+.tbl-wrap{overflow:auto;max-height:520px}
+table{width:100%;border-collapse:collapse;font-size:12px;font-family:monospace}
+thead{position:sticky;top:0;z-index:2;background:#1a2744}
+th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;border-bottom:1px solid #334155;white-space:nowrap}
+td{padding:6px 12px;border-bottom:1px solid #1e293b;color:#cbd5e1;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+tr:hover td{background:#1e293b}
+.rn{color:#475569;font-size:10px;text-align:center}
+.empty-cell{color:#334155;font-style:italic}
+
+/* PAGINATION */
+.pg-bar{padding:10px 16px;border-top:1px solid #334155;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pg-info{font-size:12px;color:#64748b;font-family:monospace;flex:1}
+.pg-btns{display:flex;gap:5px;flex-wrap:wrap}
+.pg-btn{padding:4px 10px;background:#334155;color:#94a3b8;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-weight:600}
+.pg-btn:hover{background:#475569;color:#f1f5f9}
+.pg-btn.on{background:#3b82f6;color:#fff}
+
+/* SPINNER */
+.spin{display:inline-block;width:12px;height:12px;border:2px solid #334155;border-top-color:#3b82f6;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* PERCENT BTNS */
+.pct-btns{display:flex;gap:5px;flex-wrap:wrap}
+.pct-btn{padding:4px 10px;background:#1e3a5f;color:#60a5fa;border:1px solid #1e40af;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:monospace}
+.pct-btn:hover{background:#1e40af}
+.pct-btn.on{background:#3b82f6;color:#fff}
+</style>
+</head>
+<body>
+
+<h1>🔬 CRM API Diagnostic Tool</h1>
+<div class="sub">Kiểm tra kết nối và đọc dữ liệu từ DigitalOcean API</div>
+
+<!-- CONFIG -->
+<div class="cfg">
+  <div class="cfg-row">
+    <label>API URL:</label>
+    <input id="cfgUrl" value="https://crm-analytics-api-shpn7.ondigitalocean.app">
+    <label>Token:</label>
+    <input id="cfgToken" value="tscare@2026!" type="password" style="min-width:160px;flex:0">
+    <button class="btn-test" onclick="runDiag()">🔌 Kiểm tra kết nối</button>
+  </div>
+</div>
+
+<!-- STATUS BLOCKS -->
+<div class="blk-grid" id="blkGrid">
+  <div class="blk idle" id="blk-health">
+    <div class="blk-name">🌐 API Health</div>
+    <div class="blk-val" id="bv-health">—</div>
+    <div class="blk-sub" id="bs-health">Chưa kiểm tra</div>
+  </div>
+  <div class="blk idle" id="blk-customers">
+    <div class="blk-name">👥 Customers</div>
+    <div class="blk-val" id="bv-customers">—</div>
+    <div class="blk-sub" id="bs-customers">Chưa kiểm tra</div>
+  </div>
+  <div class="blk idle" id="blk-tx2025">
+    <div class="blk-name">🧾 Giao dịch 2025</div>
+    <div class="blk-val" id="bv-tx2025">—</div>
+    <div class="blk-sub" id="bs-tx2025">Chưa kiểm tra</div>
+  </div>
+  <div class="blk idle" id="blk-tx2026">
+    <div class="blk-name">🧾 Giao dịch 2026</div>
+    <div class="blk-val" id="bv-tx2026">—</div>
+    <div class="blk-sub" id="bs-tx2026">Chưa kiểm tra</div>
+  </div>
+  <div class="blk idle" id="blk-cache">
+    <div class="blk-name">⚡ Cache Status</div>
+    <div class="blk-val" id="bv-cache">—</div>
+    <div class="blk-sub" id="bs-cache">Chưa kiểm tra</div>
+  </div>
+  <div class="blk idle" id="blk-cors">
+    <div class="blk-name">🔒 CORS Check</div>
+    <div class="blk-val" id="bv-cors">—</div>
+    <div class="blk-sub" id="bs-cors">Chưa kiểm tra</div>
+  </div>
+</div>
+
+<!-- LOG -->
+<div class="log-box" id="logBox">
+  <div class="log-line log-dim">// Nhấn "Kiểm tra kết nối" để bắt đầu...</div>
+</div>
+
+<!-- FETCH DATA -->
+<div class="fetch-sec">
+  <div class="fetch-head">
+    <div class="fetch-ttl">📊 Đọc dữ liệu mẫu</div>
+    <div class="fetch-controls">
+      <span class="ctl-label">Dataset:</span>
+      <select id="selDs">
+        <option value="customers">customers</option>
+        <option value="tx2025">transactions_2025</option>
+        <option value="tx2026">transactions_2026</option>
+      </select>
+      <span class="ctl-label">% dữ liệu:</span>
+      <div class="pct-btns" id="pctBtns">
+        <button class="pct-btn on" data-pct="10" onclick="setPct(10,this)">10%</button>
+        <button class="pct-btn" data-pct="20" onclick="setPct(20,this)">20%</button>
+        <button class="pct-btn" data-pct="50" onclick="setPct(50,this)">50%</button>
+        <button class="pct-btn" data-pct="100" onclick="setPct(100,this)">100%</button>
+      </div>
+      <span class="ctl-label">Hiển thị:</span>
+      <select id="selPg">
+        <option value="100">100 dòng/trang</option>
+        <option value="200">200 dòng/trang</option>
+        <option value="500">500 dòng/trang</option>
+        <option value="1000">1000 dòng/trang</option>
+        <option value="all">Tất cả</option>
+      </select>
+      <button class="btn-go" onclick="fetchData()">▶ Tải dữ liệu</button>
+    </div>
+  </div>
+  <div class="fetch-info" id="fetchInfo" style="display:none">
+    <div class="fi-item"><span>Dataset: </span><span id="fiDs">—</span></div>
+    <div class="fi-item"><span>Tổng dòng: </span><span id="fiTotal">—</span></div>
+    <div class="fi-item"><span>Đang xem: </span><span id="fiShown">—</span></div>
+    <div class="fi-item"><span>Thời gian fetch: </span><span id="fiTime">—</span></div>
+    <div class="fi-item"><span>Cột: </span><span id="fiCols">—</span></div>
+  </div>
+  <div class="tbl-wrap" id="tblWrap">
+    <div style="padding:40px;text-align:center;color:#475569;font-family:monospace;font-size:13px">
+      Chọn dataset và nhấn "Tải dữ liệu"
+    </div>
+  </div>
+  <div class="pg-bar" id="pgBar" style="display:none">
+    <div class="pg-info" id="pgInfo"></div>
+    <div class="pg-btns" id="pgBtns"></div>
+  </div>
+</div>
+
+<!-- RAW RESPONSE -->
+<div class="fetch-sec">
+  <div class="fetch-head">
+    <div class="fetch-ttl">🔍 Raw API Test — nhập endpoint bất kỳ</div>
+    <div class="fetch-controls">
+      <input id="rawPath" value="/api/health" style="min-width:300px;padding:6px 10px;background:#0f172a;border:1px solid #334155;border-radius:7px;color:#f1f5f9;font-family:monospace;font-size:12px;outline:none">
+      <button class="btn-test" onclick="testRaw()">▶ Gọi</button>
+    </div>
+  </div>
+  <div class="log-box" id="rawBox" style="max-height:300px;margin:0;border:none;border-radius:0">
+    <div class="log-dim">// Response sẽ hiển thị ở đây</div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+let allRows = [];
+let pageSize = 100;
+let curPg = 1;
+let totalRows = 0;
+let curPct = 10;
+
+// ══════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════
+function G(id){ return document.getElementById(id); }
+function fn(n){ return n!=null ? Number(n).toLocaleString('vi-VN') : '—'; }
+
+function log(msg, type='info'){
+  const box = G('logBox');
+  const cls = {ok:'log-ok',err:'log-err',warn:'log-warn',info:'log-info',dim:'log-dim'}[type]||'log-info';
+  const ts = new Date().toLocaleTimeString('vi-VN');
+  const div = document.createElement('div');
+  div.className = `log-line ${cls}`;
+  div.textContent = `[${ts}] ${msg}`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setBlk(id, state, val, sub){
+  const el = G('blk-'+id);
+  el.className = `blk ${state}`;
+  G('bv-'+id).textContent = val;
+  G('bs-'+id).textContent = sub;
+}
+
+function getApiBase(){ return G('cfgUrl').value.trim().replace(/\/$/,''); }
+function getToken(){   return G('cfgToken').value.trim(); }
+
+async function callApi(path, noAuth=false){
+  const base = getApiBase();
+  const tok  = getToken();
+  const sep  = path.includes('?') ? '&' : '?';
+  const url  = base + path + (noAuth ? '' : sep+'t='+encodeURIComponent(tok));
+
+  const ctrl  = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), 60000);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    return { ok: r.ok, status: r.status, headers: Object.fromEntries(r.headers.entries()), data: await r.json() };
+  } catch(e){
+    clearTimeout(timer);
+    return { ok: false, status: 0, error: e.name==='AbortError' ? 'TIMEOUT (60s)' : e.message };
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  DIAG
+// ══════════════════════════════════════════════════
+async function runDiag(){
+  G('logBox').innerHTML = '';
+  log('Bắt đầu kiểm tra...','dim');
+
+  // 1. CORS check — không cần token
+  log('1. Kiểm tra CORS (OPTIONS preflight)...','info');
+  setBlk('cors','loading','⏳...','đang test');
+  try {
+    const base = getApiBase();
+    const r = await fetch(base+'/api/health', { method:'OPTIONS' });
+    const origin = r.headers.get('access-control-allow-origin');
+    if(origin==='*' || origin){
+      setBlk('cors','ok','✓ OK',`Allow-Origin: ${origin}`);
+      log(`CORS OK — Access-Control-Allow-Origin: ${origin}`,'ok');
+    } else {
+      setBlk('cors','err','✗ Thiếu CORS header','Không có Access-Control-Allow-Origin');
+      log('CORS: Thiếu Access-Control-Allow-Origin header','err');
+    }
+  } catch(e){
+    setBlk('cors','err','✗ Lỗi',e.message);
+    log('CORS lỗi: '+e.message,'err');
+  }
+
+  // 2. Health check
+  log('2. Kiểm tra /api/health...','info');
+  setBlk('health','loading','⏳...','đang kết nối');
+  const h = await callApi('/api/health', true); // health không cần token
+  if(h.ok && h.data?.status==='ok'){
+    setBlk('health','ok','✓ Online',`v${h.data.version||'?'} · ${fn(h.data.customers)} KH`);
+    log(`Health OK — ${fn(h.data.customers)} customers trong DB`,'ok');
+  } else {
+    setBlk('health','err','✗ Lỗi', h.error || `HTTP ${h.status}`);
+    log(`Health FAIL: ${h.error||JSON.stringify(h.data)}`,'err');
+    log('⚠ API không phản hồi — kiểm tra DO App Platform','warn');
+    return;
+  }
+
+  // 3. Cache status
+  log('3. Kiểm tra cache status...','info');
+  setBlk('cache','loading','⏳...','đang kiểm tra');
+  const cs = await callApi('/api/cache/status', true);
+  if(cs.ok){
+    const d = cs.data;
+    if(d.ready){
+      setBlk('cache','ok',`${d.keys_cached?.length||0} keys`,`Ready · ${d.elapsed_seconds?.toFixed(0)||'?'}s build`);
+      log(`Cache READY — ${d.keys_cached?.length} datasets cached`,'ok');
+    } else {
+      setBlk('cache','loading',`${d.keys_cached?.length||0}/16`,`Đang build... (${d.elapsed_seconds?.toFixed(0)||'?'}s)`);
+      log(`Cache đang build — ${d.keys_cached?.length||0}/16 keys xong`,'warn');
+      if(d.errors?.length){
+        d.errors.forEach(e=>log('Cache error: '+e,'err'));
+      }
+    }
+  } else {
+    setBlk('cache','err','✗ Lỗi',cs.error||`HTTP ${cs.status}`);
+    log('Cache status lỗi: '+JSON.stringify(cs),'err');
+  }
+
+  // 4. Test auth — customers count
+  log('4. Test authentication + đọc customers...','info');
+  setBlk('customers','loading','⏳...','đang đọc');
+  const cr = await callApi('/api/diagnostic/count?dataset=customers');
+  if(cr.ok){
+    setBlk('customers','ok',fn(cr.data.count),'customers.parquet ✓');
+    log(`Customers: ${fn(cr.data.count)} dòng · ${cr.data.size_mb||'?'} MB`,'ok');
+  } else {
+    // Fallback: thử search để kiểm tra auth
+    const cr2 = await callApi('/api/customers/search?q=00001&limit=1');
+    if(cr2.ok){
+      setBlk('customers','ok','✓ Kết nối OK','Auth + query OK');
+      log('Customers auth OK (via search endpoint)','ok');
+    } else {
+      setBlk('customers','err','✗ Lỗi', cr2.error||`HTTP ${cr2.status}`);
+      log(`Customers FAIL (${cr2.status}): ${cr2.error||JSON.stringify(cr2.data)}`,'err');
+      if(cr2.status===401) log('⚠ Token sai hoặc không được gửi','warn');
+    }
+  }
+
+  // 5. Test revenue monthly (endpoint hay dùng nhất)
+  log('5. Test endpoint /api/revenue/monthly...','info');
+  setBlk('tx2025','loading','⏳...','đang query');
+  const t0 = Date.now();
+  const rv = await callApi('/api/revenue/monthly');
+  const elapsed = ((Date.now()-t0)/1000).toFixed(1);
+  if(rv.ok && Array.isArray(rv.data)){
+    const rows2025 = rv.data.filter(d=>d.year===2025);
+    const rows2026 = rv.data.filter(d=>d.year===2026);
+    const rev2025 = rows2025.reduce((s,r)=>s+(r.revenue||0),0);
+    const rev2026 = rows2026.reduce((s,r)=>s+(r.revenue||0),0);
+    setBlk('tx2025','ok',fn(rows2025.reduce((s,r)=>s+(r.bills||0),0))+' bills',`DS: ${(rev2025/1e9).toFixed(1)}B · ${elapsed}s`);
+    setBlk('tx2026','ok',fn(rows2026.reduce((s,r)=>s+(r.bills||0),0))+' bills',`DS: ${(rev2026/1e9).toFixed(1)}B · ${elapsed}s`);
+    log(`Revenue monthly OK — ${rv.data.length} tháng · ${elapsed}s`,'ok');
+    log(`  2025: ${rows2025.length} tháng · ${(rev2025/1e9).toFixed(2)}B VND`,'ok');
+    log(`  2026: ${rows2026.length} tháng · ${(rev2026/1e9).toFixed(2)}B VND`,'ok');
+  } else {
+    setBlk('tx2025','err','✗ Lỗi', rv.error||`HTTP ${rv.status}`);
+    setBlk('tx2026','err','✗ Lỗi', rv.error||`HTTP ${rv.status}`);
+    log(`Revenue monthly FAIL (${rv.status}): ${rv.error||JSON.stringify(rv.data)}`,'err');
+  }
+
+  // 6. Test KPI
+  log('6. Test /api/kpi/overview...','info');
+  const t1 = Date.now();
+  const kpi = await callApi('/api/kpi/overview');
+  const el2 = ((Date.now()-t1)/1000).toFixed(1);
+  if(kpi.ok && kpi.data?.total_kh){
+    log(`KPI OK (${el2}s) — total_kh: ${fn(kpi.data.total_kh)} · churn: ${fn(kpi.data.churned)}`,'ok');
+  } else {
+    log(`KPI FAIL (${el2}s) — ${kpi.status}: ${kpi.error||JSON.stringify(kpi.data)}`,'err');
+    if(kpi.status===503) log('⚠ Cache chưa build xong — thử lại sau 60 giây','warn');
+  }
+
+  log('─────────────────────────────────','dim');
+  log('Chẩn đoán xong! Xem log bên trên để xác định vấn đề.','dim');
+}
+
+// ══════════════════════════════════════════════════
+//  FETCH DATA
+// ══════════════════════════════════════════════════
+function setPct(pct, btn){
+  curPct = pct;
+  document.querySelectorAll('.pct-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+async function fetchData(){
+  const ds = G('selDs').value;
+  const pgSel = G('selPg').value;
+  pageSize = pgSel==='all' ? 999999 : parseInt(pgSel);
+  curPg = 1;
+
+  G('tblWrap').innerHTML = `<div style="padding:30px;text-align:center;color:#60a5fa;font-family:monospace"><span class="spin"></span>Đang tải dữ liệu ${curPct}% của ${ds}...</div>`;
+  G('pgBar').style.display='none';
+  G('fetchInfo').style.display='none';
+
+  // Map dataset → endpoint
+  const endpointMap = {
+    'customers': `/api/diagnostic/sample?dataset=customers&pct=${curPct}`,
+    'tx2025':    `/api/diagnostic/sample?dataset=tx2025&pct=${curPct}`,
+    'tx2026':    `/api/diagnostic/sample?dataset=tx2026&pct=${curPct}`,
+  };
+
+  const t0 = Date.now();
+  const path = endpointMap[ds];
+  log(`Fetch ${ds} ${curPct}%...`,'info');
+
+  const r = await callApi(path);
+  const elapsed = ((Date.now()-t0)/1000).toFixed(2);
+
+  if(!r.ok){
+    // Fallback: dùng endpoint có sẵn
+    log(`Endpoint diagnostic không có, thử fallback...`,'warn');
+    await fetchFallback(ds, elapsed);
+    return;
+  }
+
+  const d = r.data;
+  allRows = d.rows || d.data || [];
+  totalRows = d.total || allRows.length;
+
+  log(`Fetch OK — ${fn(allRows.length)} dòng · ${elapsed}s`,'ok');
+  renderTable(d.headers || (allRows.length>0?Object.keys(allRows[0]):[]), allRows, ds, elapsed);
+}
+
+async function fetchFallback(ds, elapsed0){
+  // Dùng segment query để lấy customers, hoặc rfm customers cho tx
+  let path, label;
+  if(ds==='customers'){
+    const limit = Math.min(Math.round(3500000 * curPct/100), 5000);
+    path = `/api/segment/query?limit=${limit}&offset=0`;
+    label = 'customers (qua segment query)';
+  } else {
+    // Dùng rfm customers cho transaction data
+    const limit = Math.min(Math.round(10000 * curPct/100), 2000);
+    path = `/api/rfm/customers?limit=${limit}`;
+    label = 'customers + RFM data';
+  }
+
+  const t0 = Date.now();
+  const r = await callApi(path);
+  const elapsed = ((Date.now()-t0)/1000).toFixed(2);
+
+  if(!r.ok){
+    G('tblWrap').innerHTML = `<div style="padding:30px;text-align:center;color:#f87171;font-family:monospace">
+      ✗ Lỗi ${r.status}: ${r.error||JSON.stringify(r.data)}<br><br>
+      <span style="color:#64748b">Endpoint: ${path}</span>
+    </div>`;
+    log(`Fallback FAIL (${r.status}): ${r.error||JSON.stringify(r.data)}`,'err');
+    return;
+  }
+
+  const rows = Array.isArray(r.data) ? r.data : (r.data.data||[]);
+  const total = r.data.total || rows.length;
+  allRows = rows;
+  totalRows = total;
+
+  log(`Fallback OK — ${fn(rows.length)} dòng · ${elapsed}s (${label})`,'ok');
+  const headers = rows.length>0 ? Object.keys(rows[0]) : [];
+  renderTable(headers, rows, label, elapsed);
+}
+
+function renderTable(headers, rows, dsLabel, elapsed){
+  if(!rows.length){
+    G('tblWrap').innerHTML='<div style="padding:30px;text-align:center;color:#64748b;font-family:monospace">Không có dữ liệu</div>';
+    return;
+  }
+
+  // Update info bar
+  G('fetchInfo').style.display='flex';
+  G('fiDs').textContent = dsLabel;
+  G('fiTotal').textContent = fn(totalRows);
+  G('fiShown').textContent = fn(rows.length)+' dòng đang xem';
+  G('fiTime').textContent = elapsed+'s';
+  G('fiCols').textContent = headers.length+' cột';
+
+  // Render current page
+  renderPage();
+}
+
+function renderPage(){
+  const ps = pageSize>=999999 ? allRows.length : pageSize;
+  const start = (curPg-1)*ps;
+  const end   = Math.min(start+ps, allRows.length);
+  const slice = allRows.slice(start, end);
+  const headers = allRows.length>0 ? Object.keys(allRows[0]) : [];
+  const totalPgs = ps>=999999 ? 1 : Math.ceil(allRows.length/ps);
+
+  const parts = [
+    `<table><thead><tr><th class="rn">#</th>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`
+  ];
+  slice.forEach((row,i)=>{
+    parts.push(`<tr><td class="rn">${start+i+1}</td>`);
+    headers.forEach(h=>{
+      const v = row[h];
+      const empty = v===null||v===undefined||v==='';
+      parts.push(`<td class="${empty?'empty-cell':''}" title="${empty?'':String(v).replace(/"/g,'&quot;')}">${empty?'null':String(v)}</td>`);
+    });
+    parts.push('</tr>');
+  });
+  parts.push('</tbody></table>');
+  G('tblWrap').innerHTML = parts.join('');
+
+  // Pagination
+  if(totalPgs>1){
+    G('pgBar').style.display='flex';
+    G('pgInfo').textContent=`Trang ${curPg}/${totalPgs} · ${fn(start+1)}–${fn(end)} / ${fn(allRows.length)} dòng hiển thị`;
+    const btns=[];
+    if(curPg>1) btns.push(`<button class="pg-btn" onclick="goPage(1)">«</button><button class="pg-btn" onclick="goPage(${curPg-1})">‹</button>`);
+    const r=3, from=Math.max(1,curPg-r), to=Math.min(totalPgs,curPg+r);
+    for(let i=from;i<=to;i++) btns.push(`<button class="pg-btn${i===curPg?' on':''}" onclick="goPage(${i})">${i}</button>`);
+    if(curPg<totalPgs) btns.push(`<button class="pg-btn" onclick="goPage(${curPg+1})">›</button><button class="pg-btn" onclick="goPage(${totalPgs})">»</button>`);
+    G('pgBtns').innerHTML=btns.join('');
+  } else {
+    G('pgBar').style.display='flex';
+    G('pgBtns').innerHTML='';
+    G('pgInfo').textContent=`${fn(allRows.length)} dòng · 1 trang`;
+  }
+}
+
+function goPage(n){ curPg=n; renderPage(); G('tblWrap').scrollTop=0; }
+
+// ══════════════════════════════════════════════════
+//  RAW TEST
+// ══════════════════════════════════════════════════
+async function testRaw(){
+  const path = G('rawPath').value.trim();
+  const box = G('rawBox');
+  box.innerHTML = `<div class="log-dim"><span class="spin"></span>Calling ${path}...</div>`;
+  const t0 = Date.now();
+  const r = await callApi(path);
+  const elapsed = ((Date.now()-t0)/1000).toFixed(2);
+
+  let out = `// Status: ${r.ok?'✓':'✗'} HTTP ${r.status||0} · ${elapsed}s\n`;
+  out += `// URL: ${getApiBase()+path}\n`;
+  if(r.headers){
+    out += `// CORS: ${r.headers['access-control-allow-origin']||'(không có header)'}\n`;
+  }
+  out += '\n';
+  out += JSON.stringify(r.data||{error:r.error}, null, 2);
+
+  box.innerHTML = `<pre style="color:${r.ok?'#4ade80':'#f87171'};font-size:12px;white-space:pre-wrap;word-break:break-all">${out}</pre>`;
+}
+
+// ══════════════════════════════════════════════════
+//  INIT — auto check health on load
+// ══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async ()=>{
+  // Quick health ping
+  const r = await callApi('/api/health', true);
+  if(r.ok && r.data?.status==='ok'){
+    setBlk('health','ok','✓ Online',`${fn(r.data.customers)} KH · v${r.data.version||'?'}`);
+    log('Auto-ping: API online','ok');
+    if(r.data.cache_ready) {
+      setBlk('cache','ok',`Ready`,`${r.data.cache_keys||'?'} keys cached`);
+    } else {
+      setBlk('cache','loading','Building...','Đang build cache');
+    }
+  } else {
+    setBlk('health','err','✗ Offline', r.error||`HTTP ${r.status}`);
+    log('Auto-ping: API offline — '+( r.error||`HTTP ${r.status}`),'err');
+  }
+});
+</script>
+</body>
+</html>

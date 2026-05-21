@@ -150,30 +150,9 @@ tr:hover td{background:#f8fffe}
 .err-p{background:var(--rl);border:1px solid rgba(220,38,38,.2);border-radius:10px;padding:14px 18px;margin-bottom:12px;display:flex;gap:10px}
 .err-p button{margin-top:7px;padding:4px 12px;background:var(--rd);color:#fff;border:none;border-radius:6px;font-family:var(--fn);font-size:12px;font-weight:700;cursor:pointer}
 @media(max-width:860px){.sb{display:none}.main{margin-left:0}.g2,.g3{grid-template-columns:1fr}}
-
-/* RUN BUTTON for charts */
-.ch-run-wrap{position:relative}
-.ch-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:200px;background:var(--bg);border-radius:8px;color:var(--tx2)}
-.ch-placeholder .ph-ico{font-size:32px;margin-bottom:8px;opacity:.4}
-.ch-placeholder .ph-lbl{font-size:12px;font-weight:600;margin-bottom:12px;opacity:.6}
-.btn-run-chart{background:var(--gr);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:var(--fn);font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
-.btn-run-chart:hover{background:var(--gd);transform:translateY(-1px);box-shadow:0 4px 12px rgba(22,163,74,.3)}
-.btn-run-chart:disabled{opacity:.5;cursor:not-allowed;transform:none}
 </style>
 </head>
 <body>
-<style>
-#build-badge{
-  position:fixed;top:0;left:0;z-index:99999;
-  background:#1e293b;color:#4ade80;
-  font-family:monospace;font-size:10px;font-weight:700;
-  padding:2px 8px;border-radius:0 0 6px 0;
-  border-bottom:1px solid #334155;border-right:1px solid #334155;
-  opacity:.85;pointer-events:none;
-  letter-spacing:.5px;
-}
-</style>
-<div id="build-badge">BUILD 260521-1700</div>
 <!-- overlay removed - non-blocking -->
 
 <!-- SIDEBAR -->
@@ -232,38 +211,11 @@ tr:hover td{background:#f8fffe}
   <div id="pgOverview">
     <div class="kpi-grid" id="kpiGrid"></div>
     <div class="g2">
-      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--gr)"></div><span data-i="chart_revenue_monthly">Doanh số theo tháng 2025 vs 2026</span></div></div><div class="card-body"><div class="ch-wrap h280"><div class="ch-run-wrap" id="wrap_chRevOv">
-  <div class="ch-placeholder" id="ph_chRevOv">
-    <div class="ph-ico">📊</div>
-    <div class="ph-lbl" data-i="lbl_click_run">Nhấn RUN để vẽ biểu đồ</div>
-    <button class="btn-run-chart" onclick="runChart('chRevOv',renderRevOv)">
-      ▶ <span data-i="btn_run_chart">Chạy biểu đồ</span>
-    </button>
-  </div>
-  <div style="display:none" id="canvas_chRevOv"><canvas id="chRevOv"></canvas></div>
-</div></div></div></div>
-      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--pu)"></div><span data-i="chart_tier_dist">Phân bổ hạng thẻ 2026</span></div></div><div class="card-body"><div class="ch-wrap h280"><div class="ch-run-wrap" id="wrap_chTierOv">
-  <div class="ch-placeholder" id="ph_chTierOv">
-    <div class="ph-ico">📊</div>
-    <div class="ph-lbl" data-i="lbl_click_run">Nhấn RUN để vẽ biểu đồ</div>
-    <button class="btn-run-chart" onclick="runChart('chTierOv',renderTierOv)">
-      ▶ <span data-i="btn_run_chart">Chạy biểu đồ</span>
-    </button>
-  </div>
-  <div style="display:none" id="canvas_chTierOv"><canvas id="chTierOv"></canvas></div>
-</div></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--gr)"></div><span data-i="chart_revenue_monthly">Doanh số theo tháng 2025 vs 2026</span></div></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chRevOv"></canvas></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--pu)"></div><span data-i="chart_tier_dist">Phân bổ hạng thẻ 2026</span></div></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chTierOv"></canvas></div></div></div>
     </div>
     <div class="g2">
-      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--or)"></div><span data-i="chart_new_ret">KH mới vs quay lại theo tháng (2026)</span></div></div><div class="card-body"><div class="ch-wrap h280"><div class="ch-run-wrap" id="wrap_chNewRet">
-  <div class="ch-placeholder" id="ph_chNewRet">
-    <div class="ph-ico">📊</div>
-    <div class="ph-lbl" data-i="lbl_click_run">Nhấn RUN để vẽ biểu đồ</div>
-    <button class="btn-run-chart" onclick="runChart('chNewRet',renderNewRet)">
-      ▶ <span data-i="btn_run_chart">Chạy biểu đồ</span>
-    </button>
-  </div>
-  <div style="display:none" id="canvas_chNewRet"><canvas id="chNewRet"></canvas></div>
-</div></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--or)"></div><span data-i="chart_new_ret">KH mới vs quay lại theo tháng (2026)</span></div></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chNewRet"></canvas></div></div></div>
       <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--rd)"></div><span data-i="chart_churn_summary">Hành vi KH 2025 → 2026</span></div></div><div class="card-body" id="churnSumBody" style="padding:10px 14px"></div></div>
     </div>
   </div>
@@ -296,37 +248,10 @@ tr:hover td{background:#f8fffe}
   <!-- MEMBERSHIP -->
   <div id="pgMembership" class="hidden">
     <div class="g2">
-      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--pu)"></div><span data-i="chart_tier_count">Số KH theo hạng thẻ</span></div></div><div class="card-body"><div class="ch-wrap h280" data-canvas-id="chMemPie"><div class="ch-run-wrap" id="wrap_chMemPie">
-  <div class="ch-placeholder" id="ph_chMemPie">
-    <div class="ph-ico">📊</div>
-    <div class="ph-lbl" data-i="lbl_click_run">Nhấn RUN để vẽ biểu đồ</div>
-    <button class="btn-run-chart" onclick="runChart('chMemPie',renderMemPie)">
-      ▶ <span data-i="btn_run_chart">Chạy biểu đồ</span>
-    </button>
-  </div>
-  <div style="display:none" id="canvas_chMemPie"><canvas id="chMemPie"></canvas></div>
-</div></div></div></div>
-      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--or)"></div><span data-i="chart_tier_rev">DSTL 2026 theo hạng thẻ</span></div></div><div class="card-body"><div class="ch-wrap h280" data-canvas-id="chMemRev"><div class="ch-run-wrap" id="wrap_chMemRev">
-  <div class="ch-placeholder" id="ph_chMemRev">
-    <div class="ph-ico">📊</div>
-    <div class="ph-lbl" data-i="lbl_click_run">Nhấn RUN để vẽ biểu đồ</div>
-    <button class="btn-run-chart" onclick="runChart('chMemRev',renderMemRev)">
-      ▶ <span data-i="btn_run_chart">Chạy biểu đồ</span>
-    </button>
-  </div>
-  <div style="display:none" id="canvas_chMemRev"><canvas id="chMemRev"></canvas></div>
-</div></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--pu)"></div><span data-i="chart_tier_count">Số KH theo hạng thẻ</span></div></div><div class="card-body"><div class="ch-wrap h280" data-canvas-id="chMemPie"><canvas id="chMemPie"></canvas></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--or)"></div><span data-i="chart_tier_rev">DSTL 2026 theo hạng thẻ</span></div></div><div class="card-body"><div class="ch-wrap h280" data-canvas-id="chMemRev"><canvas id="chMemRev"></canvas></div></div></div>
     </div>
-    <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--bl)"></div><span data-i="chart_tier_aov">Basket theo hạng thẻ × năm</span></div></div><div class="card-body"><div class="ch-wrap h280"><div class="ch-run-wrap" id="wrap_chTierAOV">
-  <div class="ch-placeholder" id="ph_chTierAOV">
-    <div class="ph-ico">📊</div>
-    <div class="ph-lbl" data-i="lbl_click_run">Nhấn RUN để vẽ biểu đồ</div>
-    <button class="btn-run-chart" onclick="runChart('chTierAOV',renderTierAOV)">
-      ▶ <span data-i="btn_run_chart">Chạy biểu đồ</span>
-    </button>
-  </div>
-  <div style="display:none" id="canvas_chTierAOV"><canvas id="chTierAOV"></canvas></div>
-</div></div></div></div>
+    <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--bl)"></div><span data-i="chart_tier_aov">Basket theo hạng thẻ × năm</span></div></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chTierAOV"></canvas></div></div></div>
   </div>
 
   <!-- RFM -->
@@ -366,16 +291,7 @@ tr:hover td{background:#f8fffe}
     <div id="churnPanTier" class="hidden">
       <div class="card">
         <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--pu)"></div><span data-i="chart_churn_by_tier">Pattern 2026 theo hạng thẻ</span></div></div>
-        <div class="card-body"><div class="ch-wrap h340"><div class="ch-run-wrap" id="wrap_chChurnTier">
-  <div class="ch-placeholder" id="ph_chChurnTier">
-    <div class="ph-ico">📊</div>
-    <div class="ph-lbl" data-i="lbl_click_run">Nhấn RUN để vẽ biểu đồ</div>
-    <button class="btn-run-chart" onclick="runChart('chChurnTier',renderChurnTier)">
-      ▶ <span data-i="btn_run_chart">Chạy biểu đồ</span>
-    </button>
-  </div>
-  <div style="display:none" id="canvas_chChurnTier"><canvas id="chChurnTier"></canvas></div>
-</div></div></div>
+        <div class="card-body"><div class="ch-wrap h340"><canvas id="chChurnTier"></canvas></div></div>
       </div>
       <div id="churnTierDetail"></div>
     </div>
@@ -393,16 +309,7 @@ tr:hover td{background:#f8fffe}
             </select>
           </div>
         </div>
-        <div class="card-body"><div class="ch-wrap h320"><div class="ch-run-wrap" id="wrap_chActiveTier">
-  <div class="ch-placeholder" id="ph_chActiveTier">
-    <div class="ph-ico">📊</div>
-    <div class="ph-lbl" data-i="lbl_click_run">Nhấn RUN để vẽ biểu đồ</div>
-    <button class="btn-run-chart" onclick="runChart('chActiveTier',renderActiveTier)">
-      ▶ <span data-i="btn_run_chart">Chạy biểu đồ</span>
-    </button>
-  </div>
-  <div style="display:none" id="canvas_chActiveTier"><canvas id="chActiveTier"></canvas></div>
-</div></div></div>
+        <div class="card-body"><div class="ch-wrap h320"><canvas id="chActiveTier"></canvas></div></div>
       </div>
     </div>
   </div>
@@ -515,16 +422,7 @@ tr:hover td{background:#f8fffe}
           <select class="fsel" id="selBrMon" onchange="loadBranches()"><option value="0">Tất cả</option><option value="1">T1</option><option value="2">T2</option><option value="3">T3</option><option value="4">T4</option><option value="5">T5</option><option value="6">T6</option><option value="7">T7</option><option value="8">T8</option><option value="9">T9</option><option value="10">T10</option><option value="11">T11</option><option value="12">T12</option></select>
         </div>
       </div>
-      <div class="card-body"><div class="ch-wrap h340"><div class="ch-run-wrap" id="wrap_chBranch">
-  <div class="ch-placeholder" id="ph_chBranch">
-    <div class="ph-ico">📊</div>
-    <div class="ph-lbl" data-i="lbl_click_run">Nhấn RUN để vẽ biểu đồ</div>
-    <button class="btn-run-chart" onclick="runChart('chBranch',renderBranch)">
-      ▶ <span data-i="btn_run_chart">Chạy biểu đồ</span>
-    </button>
-  </div>
-  <div style="display:none" id="canvas_chBranch"><canvas id="chBranch"></canvas></div>
-</div></div></div>
+      <div class="card-body"><div class="ch-wrap h340"><canvas id="chBranch"></canvas></div></div>
     </div>
     <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--gr)"></div><span data-i="branch_table">Chi tiết chi nhánh</span></div></div><div class="card-body" id="branchTable"></div></div>
   </div>
@@ -716,33 +614,6 @@ const I18N = {
     btn_refresh:'Làm mới',btn_run:'Chạy',btn_filter:'Lọc',btn_reset:'Reset',
     btn_export_csv:'Xuất CSV',btn_load_more:'Tải thêm',
     filter_results:'Kết quả lọc',
-    // Chart titles
-    chart_revenue_monthly:'Doanh số theo tháng 2025 vs 2026',
-    chart_revenue_trend:'Xu hướng doanh số',
-    chart_tier_dist:'Phân bổ hạng thẻ 2026',
-    chart_tier_count:'Số KH theo hạng thẻ',
-    chart_tier_rev:'DSTL 2026 theo hạng thẻ',
-    chart_tier_aov:'Basket theo hạng thẻ × năm',
-    chart_new_ret:'KH mới vs quay lại (2026)',
-    chart_churn_summary:'Hành vi KH 2025 → 2026',
-    chart_churn_pattern:'Pattern mua hàng 2026',
-    chart_churn_by_tier:'Churn theo hạng thẻ',
-    chart_active_by_tier:'Tỷ lệ active theo tháng',
-    chart_monthly_active_rate:'Active Rate theo tháng',
-    chart_aov_dist:'Phân bổ Basket',
-    chart_freq:'Tần suất mua hàng',
-    chart_rfm_dist:'Phân bổ RFM Segments',
-    // Labels & options
-    advanced_filter:'Lọc nâng cao',
-    branch_performance:'Hiệu suất Chi nhánh',
-    branch_table:'Bảng chi tiết Chi nhánh',
-    cohort_subtitle:'Tỷ lệ KH quay lại theo tháng kể từ lần mua đầu',
-    opt_all_months:'Tất cả tháng',
-    opt_all_years:'Tất cả năm',
-    search_by_name_phone:'Tìm theo tên / SĐT / Mã KH',
-    // Run button for charts
-    btn_run_chart:'▶ Chạy biểu đồ',
-    lbl_click_run:'Nhấn RUN để vẽ biểu đồ',
   },
   en:{
     nav_overview:'Overview',nav_analysis:'Customer Analysis',nav_tools:'Tools',
@@ -761,30 +632,6 @@ const I18N = {
     btn_refresh:'Refresh',btn_run:'Run',btn_filter:'Filter',btn_reset:'Reset',
     btn_export_csv:'Export CSV',btn_load_more:'Load More',
     filter_results:'Filter Results',
-    chart_revenue_monthly:'Monthly Revenue 2025 vs 2026',
-    chart_revenue_trend:'Revenue Trend',
-    chart_tier_dist:'Membership Distribution 2026',
-    chart_tier_count:'Customers by Tier',
-    chart_tier_rev:'Revenue 2026 by Tier',
-    chart_tier_aov:'Basket by Tier × Year',
-    chart_new_ret:'New vs Returning (2026)',
-    chart_churn_summary:'Customer Behavior 2025→2026',
-    chart_churn_pattern:'Purchase Pattern 2026',
-    chart_churn_by_tier:'Churn by Tier',
-    chart_active_by_tier:'Active Rate by Tier',
-    chart_monthly_active_rate:'Monthly Active Rate',
-    chart_aov_dist:'Basket Distribution',
-    chart_freq:'Purchase Frequency',
-    chart_rfm_dist:'RFM Segments',
-    advanced_filter:'Advanced Filter',
-    branch_performance:'Branch Performance',
-    branch_table:'Branch Detail Table',
-    cohort_subtitle:'Customer retention rate by months since first purchase',
-    opt_all_months:'All months',
-    opt_all_years:'All years',
-    search_by_name_phone:'Search by name / phone / ID',
-    btn_run_chart:'▶ Run Chart',
-    lbl_click_run:'Click RUN to draw chart',
   },
   ko:{
     nav_overview:'개요',nav_analysis:'고객 분석',nav_tools:'도구',
@@ -803,30 +650,6 @@ const I18N = {
     btn_refresh:'새로 고침',btn_run:'실행',btn_filter:'필터',btn_reset:'초기화',
     btn_export_csv:'CSV 내보내기',btn_load_more:'더 불러오기',
     filter_results:'필터 결과',
-    chart_revenue_monthly:'월별 매출 2025 vs 2026',
-    chart_revenue_trend:'매출 추세',
-    chart_tier_dist:'2026 등급 분포',
-    chart_tier_count:'등급별 고객 수',
-    chart_tier_rev:'등급별 2026 매출',
-    chart_tier_aov:'등급 × 연도별 Basket',
-    chart_new_ret:'신규 vs 재방문 (2026)',
-    chart_churn_summary:'고객 행동 2025→2026',
-    chart_churn_pattern:'2026 구매 패턴',
-    chart_churn_by_tier:'등급별 이탈',
-    chart_active_by_tier:'등급별 활성률',
-    chart_monthly_active_rate:'월별 활성률',
-    chart_aov_dist:'Basket 분포',
-    chart_freq:'구매 빈도',
-    chart_rfm_dist:'RFM 세그먼트',
-    advanced_filter:'고급 필터',
-    branch_performance:'지점 성과',
-    branch_table:'지점 상세 테이블',
-    cohort_subtitle:'첫 구매 이후 월별 재방문율',
-    opt_all_months:'전체 월',
-    opt_all_years:'전체 연도',
-    search_by_name_phone:'이름 / 전화 / ID 검색',
-    btn_run_chart:'▶ 차트 실행',
-    lbl_click_run:'RUN을 클릭하여 차트를 그립니다',
   },
 };
 let LANG='vi';
@@ -907,7 +730,7 @@ async function pollCache(){
       _prevCacheReady = true;
     }else{
       bar.className='cache-bar bld';
-      txt.textContent=`⏳ Cache building (${r.keys_cached?.length||0}/26)... tự động tải khi xong`;
+      txt.textContent=`⏳ Cache building (${r.keys_cached?.length||0}/16)... tự động tải khi xong`;
       _prevCacheReady = false;
     }
   }catch(e){
@@ -978,7 +801,7 @@ async function loadOverview(){
     const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),5000);
     const cs=await fetch(API+'/api/cache/status',{signal:ctrl.signal}).then(r=>r.json());
     cacheReady = cs.ready===true;
-    DBG.log('Cache: '+cacheReady+' ('+( cs.keys_cached?.length||0)+'/26)');
+    DBG.log('Cache: '+cacheReady+' ('+( cs.keys_cached?.length||0)+'/16)');
   }catch(e){ DBG.warn('Cache check fail: '+e.message); }
 
   const TO = cacheReady ? 15000 : 50000;
@@ -1142,16 +965,7 @@ async function loadBranches(){
     if(!DATA[key]) DATA[key]=await api(`/api/v2/branches/by-tier?year=${yr}&month=${mon}&top_n=30`,45000);
     // Restore canvas và render
     const brCard=document.querySelector('#pgBranches .card .card-body .ch-wrap');
-    if(brCard) brCard.innerHTML='<div class="ch-run-wrap" id="wrap_chBranch">
-  <div class="ch-placeholder" id="ph_chBranch">
-    <div class="ph-ico">📊</div>
-    <div class="ph-lbl" data-i="lbl_click_run">Nhấn RUN để vẽ biểu đồ</div>
-    <button class="btn-run-chart" onclick="runChart('chBranch',renderBranch)">
-      ▶ <span data-i="btn_run_chart">Chạy biểu đồ</span>
-    </button>
-  </div>
-  <div style="display:none" id="canvas_chBranch"><canvas id="chBranch"></canvas></div>
-</div>';
+    if(brCard) brCard.innerHTML='<canvas id="chBranch"></canvas>';
     renderBranchChart(DATA[key]);
     renderBranchTable(DATA[key]);
     DBG.ok('loadBranches done');
@@ -2165,26 +1979,6 @@ function renderYoY(data){
     +'<th>Bills 2025</th><th>Bills 2026</th>'
     +'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
   toast('✓ YoY tải xong');
-}
-
-
-// ── RUN CHART helper ────────────────────────────────────────────────────
-function runChart(canvasId, renderFn){
-  const ph   = G('ph_'+canvasId);
-  const wrap = G('canvas_'+canvasId);
-  if(ph)   ph.style.display='none';
-  if(wrap) wrap.style.display='';
-  // Đánh dấu đã run để không show placeholder lại
-  const wrapDiv = G('wrap_'+canvasId);
-  if(wrapDiv) wrapDiv.dataset.ran='1';
-  if(typeof renderFn==='function') renderFn();
-}
-
-// Auto-run chart nếu data đã sẵn sàng (sau cache load)
-function autoRunCharts(pageId){
-  document.querySelectorAll(`#${pageId} .ch-run-wrap:not([data-ran])`).forEach(w=>{
-    // Không auto-run — user phải nhấn RUN
-  });
 }
 
 </script>

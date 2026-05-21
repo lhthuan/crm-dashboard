@@ -742,7 +742,7 @@ async function pollCache(){
       _prevCacheReady = true;
     }else{
       bar.className='cache-bar bld';
-      txt.textContent=`⏳ Cache building (${r.keys_cached?.length||0}/16)... tự động tải khi xong`;
+      txt.textContent=`⏳ Cache building (${r.keys_cached?.length||0}/26)... tự động tải khi xong`;
       _prevCacheReady = false;
     }
   }catch(e){
@@ -813,7 +813,7 @@ async function loadOverview(){
     const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),5000);
     const cs=await fetch(API+'/api/cache/status',{signal:ctrl.signal}).then(r=>r.json());
     cacheReady = cs.ready===true;
-    DBG.log('Cache: '+cacheReady+' ('+( cs.keys_cached?.length||0)+'/16)');
+    DBG.log('Cache: '+cacheReady+' ('+( cs.keys_cached?.length||0)+'/26)');
   }catch(e){ DBG.warn('Cache check fail: '+e.message); }
 
   const TO = cacheReady ? 15000 : 50000;

@@ -133,6 +133,20 @@ tr:hover td{background:#1e293b}
     <div class="blk-sub" id="bs-cors">Chưa kiểm tra</div>
   </div>
 </div>
+<!-- V2 endpoints check -->
+<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin:16px 0 8px">V2 Endpoints (routes_v2)</div>
+<div class="blk-grid" id="v2Grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
+  <div class="blk idle" id="blk-v2bt"><div class="blk-name">🏪 Branches/by-tier</div><div class="blk-val" id="bv-v2bt">—</div><div class="blk-sub" id="bs-v2bt">Chưa test</div></div>
+  <div class="blk idle" id="blk-v2ct"><div class="blk-name">⚠️ Churn/by-tier</div><div class="blk-val" id="bv-v2ct">—</div><div class="blk-sub" id="bs-v2ct">Chưa test</div></div>
+  <div class="blk idle" id="blk-v2at"><div class="blk-name">📈 Active/tier-month</div><div class="blk-val" id="bv-v2at">—</div><div class="blk-sub" id="bs-v2at">Chưa test</div></div>
+  <div class="blk idle" id="blk-v2fp"><div class="blk-name">🔽 Funnel/purchase</div><div class="blk-val" id="bv-v2fp">—</div><div class="blk-sub" id="bs-v2fp">Chưa test</div></div>
+  <div class="blk idle" id="blk-v2fc"><div class="blk-name">🔽 Funnel/conversion</div><div class="blk-val" id="bv-v2fc">—</div><div class="blk-sub" id="bs-v2fc">Chưa test</div></div>
+  <div class="blk idle" id="blk-v2cr"><div class="blk-name">📅 Cohort/revenue</div><div class="blk-val" id="bv-v2cr">—</div><div class="blk-sub" id="bs-v2cr">Chưa test</div></div>
+  <div class="blk idle" id="blk-v2nc"><div class="blk-name">🚨 Alert/near-churn</div><div class="blk-val" id="bv-v2nc">—</div><div class="blk-sub" id="bs-v2nc">Chưa test</div></div>
+  <div class="blk idle" id="blk-v2cs"><div class="blk-name">💎 CLV/summary</div><div class="blk-val" id="bv-v2cs">—</div><div class="blk-sub" id="bs-v2cs">Chưa test</div></div>
+  <div class="blk idle" id="blk-v2cd"><div class="blk-name">💎 CLV/distribution</div><div class="blk-val" id="bv-v2cd">—</div><div class="blk-sub" id="bs-v2cd">Chưa test</div></div>
+  <div class="blk idle" id="blk-v2yy"><div class="blk-name">📈 Branches/yoy</div><div class="blk-val" id="bv-v2yy">—</div><div class="blk-sub" id="bs-v2yy">Chưa test</div></div>
+</div>
 
 <!-- LOG -->
 <div class="log-box" id="logBox">
@@ -262,23 +276,20 @@ async function runDiag(){
   G('logBox').innerHTML = '';
   log('Bắt đầu kiểm tra...','dim');
 
-  // 1. CORS check — không cần token
-  log('1. Kiểm tra CORS (OPTIONS preflight)...','info');
+  // 1. CORS — dùng GET thực tế (OPTIONS bị browser ẩn header → false alarm)
+  log('1. Kiểm tra CORS bằng GET thực...','info');
   setBlk('cors','loading','⏳...','đang test');
   try {
-    const base = getApiBase();
-    const r = await fetch(base+'/api/health', { method:'OPTIONS' });
-    const origin = r.headers.get('access-control-allow-origin');
-    if(origin==='*' || origin){
-      setBlk('cors','ok','✓ OK',`Allow-Origin: ${origin}`);
-      log(`CORS OK — Access-Control-Allow-Origin: ${origin}`,'ok');
+    const r = await fetch(getApiBase()+'/api/health');
+    if(r.ok){
+      setBlk('cors','ok','✓ OK','Cross-origin fetch thành công');
+      log('CORS OK — fetch cross-origin thành công','ok');
     } else {
-      setBlk('cors','err','✗ Thiếu CORS header','Không có Access-Control-Allow-Origin');
-      log('CORS: Thiếu Access-Control-Allow-Origin header','err');
+      setBlk('cors','warn','⚠ HTTP '+r.status,'Server lỗi, không phải CORS');
     }
   } catch(e){
-    setBlk('cors','err','✗ Lỗi',e.message);
-    log('CORS lỗi: '+e.message,'err');
+    setBlk('cors','err','✗ CORS Block',e.message);
+    log('CORS bị chặn: '+e.message,'err');
   }
 
   // 2. Health check
@@ -305,8 +316,8 @@ async function runDiag(){
       setBlk('cache','ok',`${d.keys_cached?.length||0} keys`,`Ready · ${d.elapsed_seconds?.toFixed(0)||'?'}s build`);
       log(`Cache READY — ${d.keys_cached?.length} datasets cached`,'ok');
     } else {
-      setBlk('cache','loading',`${d.keys_cached?.length||0}/16`,`Đang build... (${d.elapsed_seconds?.toFixed(0)||'?'}s)`);
-      log(`Cache đang build — ${d.keys_cached?.length||0}/16 keys xong`,'warn');
+      setBlk('cache','loading',`${d.keys_cached?.length||0}/26`,`Đang build... (${d.elapsed_seconds?.toFixed(0)||'?'}s)`);
+      log(`Cache đang build — ${d.keys_cached?.length||0}/26 keys xong`,'warn');
       if(d.errors?.length){
         d.errors.forEach(e=>log('Cache error: '+e,'err'));
       }
@@ -315,6 +326,36 @@ async function runDiag(){
     setBlk('cache','err','✗ Lỗi',cs.error||`HTTP ${cs.status}`);
     log('Cache status lỗi: '+JSON.stringify(cs),'err');
   }
+
+  // 3b. V2 endpoints check — song song để nhanh
+  log('3b. Kiểm tra V2 endpoints (routes_v2)...','info');
+  const v2Eps=[
+    ['v2bt','/api/v2/branches/by-tier?top_n=5',  r=>r?.length+' stores'],
+    ['v2ct','/api/v2/churn/by-tier',              r=>r?.length+' tiers'],
+    ['v2at','/api/v2/active/by-tier-month',       r=>r?.length+' rows'],
+    ['v2fp','/api/v2/funnel/purchase',            r=>r?.length+' buckets'],
+    ['v2fc','/api/v2/funnel/conversion',          r=>r?.length+' steps'],
+    ['v2cr','/api/v2/cohort/revenue',             r=>r?.length+' rows'],
+    ['v2nc','/api/v2/alert/near-churn',           r=>r?.length+' groups'],
+    ['v2cs','/api/v2/clv/summary',               r=>r?.length+' tiers'],
+    ['v2cd','/api/v2/clv/distribution',           r=>r?.length+' buckets'],
+    ['v2yy','/api/v2/branches/yoy?top_n=5',      r=>r?.length+' stores'],
+  ];
+  await Promise.all(v2Eps.map(async ([id,path,fmt])=>{
+    const bid=id.replace('v2','');
+    setBlk('v2'+bid,'loading','⏳','đang test');
+    const t0=Date.now();
+    const rv=await callApi(path,true,25000);
+    const el=((Date.now()-t0)/1000).toFixed(1)+'s';
+    if(rv.ok){
+      const cached=parseFloat(el)<1.5;
+      setBlk('v2'+bid,'ok',fmt(rv.data),el+(cached?' ⚡cache':' 🔄live'));
+      log('  ✓ '+path+' — '+fmt(rv.data)+' ('+el+')'+(cached?' [CACHE]':''),'ok');
+    }else{
+      setBlk('v2'+bid,'err','✗ Lỗi',rv.error||'HTTP '+rv.status);
+      log('  ✗ '+path+' — '+(rv.error||rv.status),'err');
+    }
+  }));
 
   // 4. Test auth — customers count
   log('4. Test authentication + đọc customers...','info');

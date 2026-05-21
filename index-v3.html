@@ -847,33 +847,50 @@ async function loadOverview(){
 
 async function loadRevenue(){
   DBG.log('loadRevenue start');
-  try{
-    if(!DATA.rev)   DATA.rev   =await api('/api/revenue/monthly',20000);
-    if(!DATA.aov25) DATA.aov25 =await api('/api/aov/distribution?year=2025',20000);
-    if(!DATA.aov26) DATA.aov26 =await api('/api/aov/distribution?year=2026',20000);
-    if(!DATA.frq25) DATA.frq25 =await api('/api/frequency/distribution?year=2025',20000);
-    if(!DATA.frq26) DATA.frq26 =await api('/api/frequency/distribution?year=2026',20000);
-    renderRevenue(); renderAov(); renderFreq();
-    DBG.ok('loadRevenue done');
-  }catch(e){ DBG.err('loadRevenue: '+e.message); showErr('pgRevenue',e.message,'loadRevenue'); }
+  // Fetch tất cả song song, allSettled — 1 fail không giết cả trang
+  const [revR,aov25R,aov26R,frq25R,frq26R] = await Promise.allSettled([
+    DATA.rev   ? Promise.resolve(DATA.rev)   : api('/api/revenue/monthly',25000),
+    DATA.aov25 ? Promise.resolve(DATA.aov25) : api('/api/aov/distribution?year=2025',25000),
+    DATA.aov26 ? Promise.resolve(DATA.aov26) : api('/api/aov/distribution?year=2026',25000),
+    DATA.frq25 ? Promise.resolve(DATA.frq25) : api('/api/frequency/distribution?year=2025',40000),
+    DATA.frq26 ? Promise.resolve(DATA.frq26) : api('/api/frequency/distribution?year=2026',40000),
+  ]);
+  let ok=0;
+  if(revR.status==='fulfilled')  {DATA.rev  =revR.value;ok++;}   else DBG.err('revenue: '+revR.reason?.message);
+  if(aov25R.status==='fulfilled'){DATA.aov25=aov25R.value;ok++;} else DBG.err('aov25: '+aov25R.reason?.message);
+  if(aov26R.status==='fulfilled'){DATA.aov26=aov26R.value;ok++;} else DBG.err('aov26: '+aov26R.reason?.message);
+  if(frq25R.status==='fulfilled'){DATA.frq25=frq25R.value;ok++;} else DBG.err('frq25: '+frq25R.reason?.message);
+  if(frq26R.status==='fulfilled'){DATA.frq26=frq26R.value;ok++;} else DBG.err('frq26: '+frq26R.reason?.message);
+  DBG.log('loadRevenue: '+ok+'/5 OK');
+  if(DATA.rev)   renderRevenue();
+  if(DATA.aov25||DATA.aov26) renderAov();
+  if(DATA.frq25||DATA.frq26) renderFreq();
+  if(ok===0) showErr('pgRevenue','Tất cả endpoints thất bại — API đang chậm','loadRevenue');
+  else if(ok<5) toast('⚠ '+ok+'/5 module tải được','warn');
+  else { DBG.ok('loadRevenue done'); toast('✓ Revenue đã tải'); }
 }
 
 async function loadMembership(){
   DBG.log('loadMembership start');
-  // Hiện loading trên tất cả chart areas
   ['chMemPie','chMemRev','chTierAOV'].forEach(id=>{
     const el=G(id); if(el) el.parentElement.innerHTML=loading('Đang tính số liệu hạng thẻ...');
   });
-  try{
-    if(!DATA.memDist) DATA.memDist=await api('/api/membership/distribution',20000);
-    if(!DATA.memTier) DATA.memTier=await api('/api/membership/revenue-by-tier',20000);
-    // Restore canvas
-    restoreCanvas('pgMembership');
-    renderTierPie(DATA.memDist,'chMemPie');
-    renderMemRev(DATA.memDist);
-    renderTierAOV(DATA.memTier);
-    DBG.ok('loadMembership done');
-  }catch(e){ DBG.err('loadMembership: '+e.message); showErr('pgMembership',e.message,'loadMembership'); }
+  const [distR,tierR] = await Promise.allSettled([
+    DATA.memDist ? Promise.resolve(DATA.memDist) : api('/api/membership/distribution',25000),
+    DATA.memTier ? Promise.resolve(DATA.memTier) : api('/api/membership/revenue-by-tier',40000),
+  ]);
+  if(distR.status==='fulfilled') DATA.memDist=distR.value;
+  else DBG.err('memDist: '+distR.reason?.message);
+  if(tierR.status==='fulfilled') DATA.memTier=tierR.value;
+  else DBG.err('memTier: '+tierR.reason?.message);
+
+  restoreCanvas('pgMembership');
+  if(DATA.memDist){ renderTierPie(DATA.memDist,'chMemPie'); renderMemRev(DATA.memDist); }
+  if(DATA.memTier) renderTierAOV(DATA.memTier);
+
+  const ok=(distR.status==='fulfilled'?1:0)+(tierR.status==='fulfilled'?1:0);
+  if(ok===0) showErr('pgMembership','Không tải được dữ liệu hạng thẻ','loadMembership');
+  else { DBG.ok('loadMembership done'); if(ok<2) toast('⚠ Một số chart chưa tải','warn'); }
 }
 
 async function loadRFM(){
@@ -1503,12 +1520,17 @@ async function loadFunnel(){
     const el=G(id); if(el) el.parentElement.innerHTML=loading('Đang tính funnel...');
   });
   G('funnelTable').innerHTML=''; G('funnelKpi').innerHTML='';
-  try{
-    if(!DATA.funnel)      DATA.funnel     =await api('/api/v2/funnel/purchase',35000);
-    if(!DATA.funnelConv)  DATA.funnelConv =await api('/api/v2/funnel/conversion',35000);
-    renderFunnel(DATA.funnel, DATA.funnelConv);
-    DBG.ok('loadFunnel done');
-  }catch(e){ DBG.err('loadFunnel: '+e.message); showErr('pgFunnel',e.message,'loadFunnel'); }
+  // allSettled — funnel/purchase chính, conversion phụ (nếu fail vẫn hiện được)
+  const [purchR,convR] = await Promise.allSettled([
+    DATA.funnel     ? Promise.resolve(DATA.funnel)     : api('/api/v2/funnel/purchase',40000),
+    DATA.funnelConv ? Promise.resolve(DATA.funnelConv) : api('/api/v2/funnel/conversion',55000),
+  ]);
+  if(purchR.status==='fulfilled') DATA.funnel=purchR.value;
+  else { DBG.err('funnel/purchase: '+purchR.reason?.message); showErr('pgFunnel',purchR.reason?.message,'loadFunnel'); return; }
+  if(convR.status==='fulfilled') DATA.funnelConv=convR.value;
+  else { DBG.warn('funnel/conversion timeout — hiển thị không có gap chart'); DATA.funnelConv=[]; }
+  renderFunnel(DATA.funnel, DATA.funnelConv);
+  DBG.ok('loadFunnel done');
 }
 
 function renderFunnel(data, conv){
@@ -1594,7 +1616,7 @@ async function loadCLV(){
   G('clvKpi').innerHTML=''; G('clvSegTable').innerHTML=''; G('revCohortBody').innerHTML='';
   ['chClvTier','chClvDist'].forEach(id=>{const el=G(id);if(el)el.parentElement.innerHTML=loading('Đang tính CLV...');});
   try{
-    if(!DATA.clvSum)   DATA.clvSum  =await api('/api/v2/clv/summary',35000);
+    if(!DATA.clvSum)   DATA.clvSum  =await api('/api/v2/clv/summary',45000);
     if(!DATA.clvDist)  DATA.clvDist =await api('/api/v2/clv/distribution',25000);
     if(!DATA.revCohort)DATA.revCohort=await api('/api/v2/cohort/revenue',45000);
     renderCLV(DATA.clvSum, DATA.clvDist, DATA.revCohort);
@@ -1700,7 +1722,7 @@ async function loadNearChurn(){
   G('alertKpi').innerHTML='';
   ['chAlertKH','chAlertRev'].forEach(id=>{const el=G(id);if(el)el.parentElement.innerHTML=loading('Đang phân tích KH at-risk...');});
   try{
-    if(!DATA.nearChurn) DATA.nearChurn=await api('/api/v2/alert/near-churn',40000);
+    if(!DATA.nearChurn) DATA.nearChurn=await api('/api/v2/alert/near-churn',50000);
     renderNearChurn(DATA.nearChurn);
     await loadAlertDetail();
     DBG.ok('loadNearChurn done');

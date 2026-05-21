@@ -1718,73 +1718,121 @@ async function loadAlertDetail(){
 }
 
 function renderNearChurn(data){
+  const riskColors=['#dc2626','#ea580c','#d97706','#94a3b8'];
   const totKH  = data.reduce((s,d)=>s+(d.total_customers||0),0);
   const totRev = data.reduce((s,d)=>s+(d.revenue_at_risk||0),0);
-  const high   = data.find(d=>d.risk_order===1);
+  const high   = data.find(d=>d.risk_order===1)||{};
+
   G('alertKpi').innerHTML=[
     ['rd','Tổng KH có nguy cơ',fn(totKH),'chưa mua trong 2026'],
     ['or','DS có nguy cơ mất',fv(totRev),'tổng DS 2025 của nhóm này'],
-    ['pu','KH rủi ro cao',fn(high?.total_customers||0),'VIP thường xuyên'],
-    ['rd','DS rủi ro cao',fv(high?.revenue_at_risk||0),'cần ưu tiên chăm sóc ngay'],
-  ].map(([c,l,v,s])=>`<div class="kpi ${c}"><div class="kpi-lbl">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s}</div></div>`).join('');
+    ['pu','KH rủi ro cao',fn(high.total_customers||0),'VIP thường xuyên'],
+    ['rd','DS rủi ro cao',fv(high.revenue_at_risk||0),'cần ưu tiên chăm sóc ngay'],
+  ].map(([cc,l,v,s])=>'<div class="kpi '+cc+'"><div class="kpi-lbl">'+l+'</div><div class="kpi-val">'+v+'</div><div class="kpi-sub">'+s+'</div></div>').join('');
 
-  const riskColors=['#dc2626','#ea580c','#d97706','#94a3b8'];
   const labels=data.map(d=>d.risk_level);
 
-  const chAK=document.createElement('canvas');chAK.id='chAlertKH';
-  G('chAlertKH')?.parentElement?.replaceChildren(chAK);
+  // Pie chart - KH by risk
+  const chAK=document.createElement('canvas');
+  chAK.id='chAlertKH';
+  const wrapKH=G('chAlertKH');
+  if(wrapKH&&wrapKH.parentElement) wrapKH.parentElement.replaceChildren(chAK);
   dc('chAlertKH');
-  CH['chAlertKH']=new Chart(G('chAlertKH'),{type:'doughnut',data:{
-    labels,datasets:[{data:data.map(d=>d.total_customers),backgroundColor:riskColors.slice(0,data.length),borderWidth:2,borderColor:'#fff'}]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},
-    tooltip:{callbacks:{label:ctx=>{const d=data[ctx.dataIndex];return`${fn(d.total_customers)} KH (DS at-risk: ${fv(d.revenue_at_risk)})`;}}}}}});
+  CH['chAlertKH']=new Chart(G('chAlertKH'),{
+    type:'doughnut',
+    data:{
+      labels:labels,
+      datasets:[{data:data.map(d=>d.total_customers),backgroundColor:riskColors.slice(0,data.length),borderWidth:2,borderColor:'#fff'}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom'},
+        tooltip:{callbacks:{label:function(ctx){
+          var d=data[ctx.dataIndex];
+          return fn(d.total_customers)+' KH (DS at-risk: '+fv(d.revenue_at_risk)+')';
+        }}}
+      }
+    }
+  });
 
-  const chAR=document.createElement('canvas');chAR.id='chAlertRev';
-  G('chAlertRev')?.parentElement?.replaceChildren(chAR);
+  // Bar chart - revenue at risk
+  const chAR=document.createElement('canvas');
+  chAR.id='chAlertRev';
+  const wrapRev=G('chAlertRev');
+  if(wrapRev&&wrapRev.parentElement) wrapRev.parentElement.replaceChildren(chAR);
   dc('chAlertRev');
-  CH['chAlertRev']=new Chart(G('chAlertRev'),{type:'bar',data:{
-    labels,datasets:[{label:'DS có nguy cơ (tỷ)',data:data.map(d=>+(d.revenue_at_risk/1e9).toFixed(2)),backgroundColor:riskColors.slice(0,data.length),borderRadius:6}]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
-    tooltip:{callbacks:{afterLabel:ctx=>{const d=data[ctx.dataIndex];return[
-      `Avg DS/KH: ${fv(d.avg_revenue)}`,
-      `Avg Bills: ${d.avg_bills}`,
-      `Avg Active Months: ${d.avg_active_months}`,
-      `Avg Days since last: ${fn(d.avg_days_since_last)} ngày`,
-    ];}}}}},
-    scales:{x:{grid:{display:false}},y:{title:{display:true,text:'Tỷ VND'},grid:{color:'rgba(0,0,0,.04)'}}}}});
+  CH['chAlertRev']=new Chart(G('chAlertRev'),{
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[{
+        label:'DS có nguy cơ (tỷ)',
+        data:data.map(d=>+(d.revenue_at_risk/1e9).toFixed(2)),
+        backgroundColor:riskColors.slice(0,data.length),
+        borderRadius:6
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{afterLabel:function(ctx){
+          var d=data[ctx.dataIndex];
+          return [
+            'Avg DS/KH: '+fv(d.avg_revenue),
+            'Avg Bills: '+d.avg_bills,
+            'Avg Active Months: '+d.avg_active_months,
+            'Avg Days since last: '+fn(d.avg_days_since_last)+' ngày'
+          ];
+        }}}
+      },
+      scales:{
+        x:{grid:{display:false}},
+        y:{title:{display:true,text:'Tỷ VND'},grid:{color:'rgba(0,0,0,.04)'}}
+      }
+    }
+  });
   toast('✓ Alert data tải xong');
 }
 
 function renderAlertDetail(data){
-  const riskLabel={1:'🔴',2:'🟠',3:'🟡',4:'⚪'};
-  G('alertDetailNote').textContent=`${fn(data.length)} KH cần liên hệ — xuất CSV để lấy toàn bộ`;
-  G('alertDetailTbl').innerHTML=`<table>
-    <thead><tr><th>Rủi ro</th><th>Mã KH</th><th>Tên KH</th><th>SĐT</th><th>Hạng thẻ</th><th>DS 2025</th><th>Avg Basket</th><th>Bills</th><th>Months Active</th><th>Ngày mua cuối</th><th>Số ngày chưa mua</th></tr></thead>
-    <tbody>${data.map(d=>`<tr>
-      <td style="text-align:center;font-size:16px">${riskLabel[d.risk_order]||'⚪'}</td>
-      <td style="font-family:var(--mn);font-size:11px;color:var(--bl)">${d.MaKH}</td>
-      <td style="font-weight:600">${d.KhachHang||'—'}</td>
-      <td style="font-family:var(--mn);font-size:11px">${d.PhoneNo||'—'}</td>
-      <td><span class="tier t-${(d.tier||'').toLowerCase()}">${d.tier}</span></td>
-      <td class="tbl-num" style="color:var(--gr);font-weight:700">${fv(d.revenue_2025)}</td>
-      <td class="tbl-num">${fv(d.avg_basket)}</td>
-      <td class="tbl-num">${fn(d.bills_2025)}</td>
-      <td class="tbl-num">${d.active_months}/${12}</td>
-      <td style="font-family:var(--mn);font-size:11px;color:var(--tx2)">${(d.last_purchase||'').substring(0,10)}</td>
-      <td class="tbl-num" style="color:var(--rd);font-weight:700">${fn(d.days_since_last)} ngày</td>
-    </tr>`).join('')}</tbody></table>`;
+  var riskLabel={1:'🔴',2:'🟠',3:'🟡',4:'⚪'};
+  G('alertDetailNote').textContent=fn(data.length)+' KH cần liên hệ — xuất CSV để lấy toàn bộ';
+  var rows=data.map(function(d){
+    return '<tr>'
+      +'<td style="text-align:center;font-size:16px">'+(riskLabel[d.risk_order]||'⚪')+'</td>'
+      +'<td style="font-family:var(--mn);font-size:11px;color:var(--bl)">'+d.MaKH+'</td>'
+      +'<td style="font-weight:600">'+(d.KhachHang||'—')+'</td>'
+      +'<td style="font-family:var(--mn);font-size:11px">'+(d.PhoneNo||'—')+'</td>'
+      +'<td><span class="tier t-'+(d.tier||'').toLowerCase()+'">'+d.tier+'</span></td>'
+      +'<td class="tbl-num" style="color:var(--gr);font-weight:700">'+fv(d.revenue_2025)+'</td>'
+      +'<td class="tbl-num">'+fv(d.avg_basket)+'</td>'
+      +'<td class="tbl-num">'+fn(d.bills_2025)+'</td>'
+      +'<td class="tbl-num">'+d.active_months+'/12</td>'
+      +'<td style="font-family:var(--mn);font-size:11px;color:var(--tx2)">'+String(d.last_purchase||'').substring(0,10)+'</td>'
+      +'<td class="tbl-num" style="color:var(--rd);font-weight:700">'+fn(d.days_since_last)+' ngày</td>'
+      +'</tr>';
+  }).join('');
+  G('alertDetailTbl').innerHTML='<table><thead><tr>'
+    +'<th>Rủi ro</th><th>Mã KH</th><th>Tên KH</th><th>SĐT</th><th>Hạng thẻ</th>'
+    +'<th>DS 2025</th><th>Avg Basket</th><th>Bills</th><th>Months</th>'
+    +'<th>Ngày mua cuối</th><th>Ngày chưa mua</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
 function exportAlertList(){
-  const tier=G('alertTierSel')?.value||'';
-  const url=API+'/api/v2/alert/near-churn-detail?limit=50000'+(tier?'&tier='+tier:'')+'&t='+encodeURIComponent(TOKEN);
-  // Build CSV từ data hiện có
   if(!alertDetailData.length){toast('Chưa có data','warn');return;}
-  const cols=['MaKH','KhachHang','PhoneNo','tier','revenue_2025','avg_basket','bills_2025','active_months','last_purchase','days_since_last','risk_order'];
-  const lines=[cols.join(','),...alertDetailData.map(r=>cols.map(c=>'"'+(r[c]??'').toString().replace(/"/g,'""')+'"').join(','))];
-  const blob=new Blob(['﻿'+lines.join('
-')],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='near_churn_alert.csv';a.click();
+  var cols=['MaKH','KhachHang','PhoneNo','tier','revenue_2025','avg_basket','bills_2025','active_months','last_purchase','days_since_last','risk_order'];
+  var lines=[cols.join(',')];
+  alertDetailData.forEach(function(r){
+    lines.push(cols.map(function(col){return '"'+String(r[col]||'').replace(/"/g,'""')+'"';}).join(','));
+  });
+  var blob=new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='near_churn_alert.csv';
+  a.click();
   toast('⬇ Xuất '+fn(alertDetailData.length)+' KH');
 }
 
@@ -1793,8 +1841,11 @@ function exportAlertList(){
 // ══════════════════════════════════════════════════════════
 async function loadYoY(){
   DBG.log('loadYoY start');
-  G('yoyKpi').innerHTML=''; G('yoyTable').innerHTML='';
-  ['chYoyRev','chYoyGrowth','chYoyKH'].forEach(id=>{const el=G(id);if(el)el.parentElement.innerHTML=loading('Đang tính YoY...');});
+  G('yoyKpi').innerHTML='';
+  G('yoyTable').innerHTML='';
+  ['chYoyRev','chYoyGrowth','chYoyKH'].forEach(function(id){
+    var el=G(id); if(el) el.parentElement.innerHTML=loading('Đang tính YoY...');
+  });
   try{
     if(!DATA.yoy) DATA.yoy=await api('/api/v2/branches/yoy?top_n=20',30000);
     renderYoY(DATA.yoy);
@@ -1803,70 +1854,108 @@ async function loadYoY(){
 }
 
 function renderYoY(data){
-  const totalRev25=data.reduce((s,d)=>s+(d.rev_2025||0),0);
-  const totalRev26=data.reduce((s,d)=>s+(d.rev_2026||0),0);
-  const totalGrowth=totalRev25>0?((totalRev26-totalRev25)/totalRev25*100).toFixed(1):0;
-  const growing=data.filter(d=>(d.rev_growth_pct||0)>0).length;
+  var totalRev25=data.reduce(function(s,d){return s+(d.rev_2025||0);},0);
+  var totalRev26=data.reduce(function(s,d){return s+(d.rev_2026||0);},0);
+  var totalGrowth=totalRev25>0?((totalRev26-totalRev25)/totalRev25*100).toFixed(1):0;
+  var growing=data.filter(function(d){return (d.rev_growth_pct||0)>0;}).length;
+  var topBranch=data.reduce(function(a,b){return (b.rev_growth_pct||0)>(a.rev_growth_pct||0)?b:a;},data[0])||{};
+
   G('yoyKpi').innerHTML=[
-    ['gr','Tổng DS 2026',fv(totalRev26),`vs 2025: ${fv(totalRev25)}`],
-    [totalGrowth>=0?'gr':'rd','Tăng trưởng tổng thể',`${totalGrowth>0?'+':''}${totalGrowth}%`,'so sánh 2025 vs 2026'],
-    ['bl','CN tăng trưởng',`${growing}/${data.length}`,`${data.length-growing} CN sụt giảm`],
-    ['or','CN tăng trưởng nhất',data.reduce((a,b)=>(b.rev_growth_pct||0)>(a.rev_growth_pct||0)?b:a,data[0])?.Store_Name||'—',
-      `+${data.reduce((a,b)=>(b.rev_growth_pct||0)>(a.rev_growth_pct||0)?b:a,data[0])?.rev_growth_pct||0}%`],
-  ].map(([c,l,v,s])=>`<div class="kpi ${c}"><div class="kpi-lbl">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s}</div></div>`).join('');
+    ['gr','Tổng DS 2026',fv(totalRev26),'vs 2025: '+fv(totalRev25)],
+    [totalGrowth>=0?'gr':'rd','Tăng trưởng tổng',(totalGrowth>0?'+':'')+totalGrowth+'%','so sánh 2025→2026'],
+    ['bl','CN tăng trưởng',growing+'/'+data.length,data.length-growing+' CN sụt giảm'],
+    ['or','CN tốt nhất',topBranch.Store_Name||'—','+'+(topBranch.rev_growth_pct||0)+'%'],
+  ].map(function(a){return '<div class="kpi '+a[0]+'"><div class="kpi-lbl">'+a[1]+'</div><div class="kpi-val">'+a[2]+'</div><div class="kpi-sub">'+a[3]+'</div></div>';}).join('');
 
-  const labels=data.map(d=>d.Store_Name||d.Store_No);
-  const growthColor=v=>v==null?'#94a3b8':v>20?'#16a34a':v>0?'#4ade80':v>-10?'#f87171':'#dc2626';
+  var labels=data.map(function(d){return d.Store_Name||d.Store_No;});
+  function growthColor(v){return v==null?'#94a3b8':v>20?'#16a34a':v>0?'#4ade80':v>-10?'#f87171':'#dc2626';}
 
-  // Revenue comparison bar
-  const chYR=document.createElement('canvas');chYR.id='chYoyRev';
-  G('chYoyRev')?.parentElement?.replaceChildren(chYR);dc('chYoyRev');
-  CH['chYoyRev']=new Chart(G('chYoyRev'),{type:'bar',data:{labels,datasets:[
-    {label:'2025',data:data.map(d=>+(d.rev_2025/1e9).toFixed(2)),backgroundColor:'rgba(37,99,235,.6)',borderRadius:4},
-    {label:'2026',data:data.map(d=>+(d.rev_2026/1e9).toFixed(2)),backgroundColor:'rgba(22,163,74,.7)',borderRadius:4},
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index',callbacks:{
-    afterBody:ctx=>{const d=data[ctx[0].dataIndex];const g=d.rev_growth_pct;return[`Tăng trưởng: ${g!=null?(g>0?'+':'')+g+'%':'N/A'}`];}
-  }}},scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{title:{display:true,text:'Tỷ VND'},grid:{color:'rgba(0,0,0,.04)'}}}}});
+  // Revenue comparison
+  var chYR=document.createElement('canvas'); chYR.id='chYoyRev';
+  var wYR=G('chYoyRev'); if(wYR&&wYR.parentElement) wYR.parentElement.replaceChildren(chYR);
+  dc('chYoyRev');
+  CH['chYoyRev']=new Chart(G('chYoyRev'),{
+    type:'bar',
+    data:{labels:labels,datasets:[
+      {label:'2025',data:data.map(function(d){return +(d.rev_2025/1e9).toFixed(2);}),backgroundColor:'rgba(37,99,235,.6)',borderRadius:4},
+      {label:'2026',data:data.map(function(d){return +(d.rev_2026/1e9).toFixed(2);}),backgroundColor:'rgba(22,163,74,.7)',borderRadius:4},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top'},tooltip:{mode:'index',callbacks:{afterBody:function(ctx){
+        var d=data[ctx[0].dataIndex];
+        var g=d.rev_growth_pct;
+        return ['Tăng trưởng: '+(g!=null?(g>0?'+':'')+g+'%':'N/A')];
+      }}}},
+      scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{title:{display:true,text:'Tỷ VND'},grid:{color:'rgba(0,0,0,.04)'}}}
+    }
+  });
 
-  // Growth % bars
-  const chYG=document.createElement('canvas');chYG.id='chYoyGrowth';
-  G('chYoyGrowth')?.parentElement?.replaceChildren(chYG);dc('chYoyGrowth');
-  CH['chYoyGrowth']=new Chart(G('chYoyGrowth'),{type:'bar',data:{labels,datasets:[{
-    label:'Tăng trưởng DS %',data:data.map(d=>d.rev_growth_pct),
-    backgroundColor:data.map(d=>growthColor(d.rev_growth_pct)),borderRadius:5
-  }]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},
-      y:{ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,.04)'},
-        afterDraw:chart=>{const y=chart.scales.y; const zero=y.getPixelForValue(0);
-          const ctx2=chart.ctx; ctx2.save(); ctx2.strokeStyle='#64748b'; ctx2.lineWidth=1;
-          ctx2.beginPath(); ctx2.moveTo(chart.chartArea.left,zero); ctx2.lineTo(chart.chartArea.right,zero); ctx2.stroke(); ctx2.restore();}
-      }}}});
+  // Growth % DS
+  var chYG=document.createElement('canvas'); chYG.id='chYoyGrowth';
+  var wYG=G('chYoyGrowth'); if(wYG&&wYG.parentElement) wYG.parentElement.replaceChildren(chYG);
+  dc('chYoyGrowth');
+  CH['chYoyGrowth']=new Chart(G('chYoyGrowth'),{
+    type:'bar',
+    data:{labels:labels,datasets:[{
+      label:'Tăng trưởng DS %',
+      data:data.map(function(d){return d.rev_growth_pct;}),
+      backgroundColor:data.map(function(d){return growthColor(d.rev_growth_pct);}),
+      borderRadius:5
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},
+        y:{ticks:{callback:function(v){return v+'%';}},grid:{color:'rgba(0,0,0,.04)'}}
+      }
+    }
+  });
 
-  // KH growth %
-  const chYK=document.createElement('canvas');chYK.id='chYoyKH';
-  G('chYoyKH')?.parentElement?.replaceChildren(chYK);dc('chYoyKH');
-  CH['chYoyKH']=new Chart(G('chYoyKH'),{type:'bar',data:{labels,datasets:[{
-    label:'Tăng trưởng KH %',data:data.map(d=>d.kh_growth_pct),
-    backgroundColor:data.map(d=>growthColor(d.kh_growth_pct)),borderRadius:5
-  }]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,.04)'}}}}});
+  // Growth % KH
+  var chYK=document.createElement('canvas'); chYK.id='chYoyKH';
+  var wYK=G('chYoyKH'); if(wYK&&wYK.parentElement) wYK.parentElement.replaceChildren(chYK);
+  dc('chYoyKH');
+  CH['chYoyKH']=new Chart(G('chYoyKH'),{
+    type:'bar',
+    data:{labels:labels,datasets:[{
+      label:'Tăng trưởng KH %',
+      data:data.map(function(d){return d.kh_growth_pct;}),
+      backgroundColor:data.map(function(d){return growthColor(d.kh_growth_pct);}),
+      borderRadius:5
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},
+        y:{ticks:{callback:function(v){return v+'%';}},grid:{color:'rgba(0,0,0,.04)'}}
+      }
+    }
+  });
 
   // Detail table
-  const sortedData=[...data].sort((a,b)=>(b.rev_growth_pct||0)-(a.rev_growth_pct||0));
-  G('yoyTable').innerHTML=`<div style="overflow-x:auto"><table>
-    <thead><tr><th>Chi nhánh</th><th>DS 2025</th><th>DS 2026</th><th>Tăng trưởng DS</th><th>KH 2025</th><th>KH 2026</th><th>Tăng trưởng KH</th><th>Bills 2025</th><th>Bills 2026</th></tr></thead>
-    <tbody>${sortedData.map(d=>{const g=d.rev_growth_pct; const kg=d.kh_growth_pct;
-      return`<tr>
-        <td style="font-weight:600">${d.Store_Name||d.Store_No}</td>
-        <td class="tbl-num">${fv(d.rev_2025)}</td>
-        <td class="tbl-num">${fv(d.rev_2026)}</td>
-        <td class="tbl-num" style="color:${g>=0?'var(--gr)':'var(--rd)'};font-weight:700">${g!=null?(g>0?'+':'')+g+'%':'—'}</td>
-        <td class="tbl-num">${fn(d.kh_2025)}</td>
-        <td class="tbl-num">${fn(d.kh_2026)}</td>
-        <td class="tbl-num" style="color:${kg>=0?'var(--gr)':'var(--rd)'};font-weight:700">${kg!=null?(kg>0?'+':'')+kg+'%':'—'}</td>
-        <td class="tbl-num">${fn(d.bills_2025)}</td>
-        <td class="tbl-num">${fn(d.bills_2026)}</td>
-      </tr>`;}).join('')}</tbody></table></div>`;
+  var sorted=[].concat(data).sort(function(a,b){return (b.rev_growth_pct||0)-(a.rev_growth_pct||0);});
+  var tableRows=sorted.map(function(d){
+    var g=d.rev_growth_pct; var kg=d.kh_growth_pct;
+    return '<tr>'
+      +'<td style="font-weight:600">'+(d.Store_Name||d.Store_No)+'</td>'
+      +'<td class="tbl-num">'+fv(d.rev_2025)+'</td>'
+      +'<td class="tbl-num">'+fv(d.rev_2026)+'</td>'
+      +'<td class="tbl-num" style="color:'+(g>=0?'var(--gr)':'var(--rd)')+';font-weight:700">'+(g!=null?(g>0?'+':'')+g+'%':'—')+'</td>'
+      +'<td class="tbl-num">'+fn(d.kh_2025)+'</td>'
+      +'<td class="tbl-num">'+fn(d.kh_2026)+'</td>'
+      +'<td class="tbl-num" style="color:'+(kg>=0?'var(--gr)':'var(--rd)')+';font-weight:700">'+(kg!=null?(kg>0?'+':'')+kg+'%':'—')+'</td>'
+      +'<td class="tbl-num">'+fn(d.bills_2025)+'</td>'
+      +'<td class="tbl-num">'+fn(d.bills_2026)+'</td>'
+      +'</tr>';
+  }).join('');
+  G('yoyTable').innerHTML='<div style="overflow-x:auto"><table><thead><tr>'
+    +'<th>Chi nhánh</th><th>DS 2025</th><th>DS 2026</th><th>Tăng trưởng DS</th>'
+    +'<th>KH 2025</th><th>KH 2026</th><th>Tăng trưởng KH</th>'
+    +'<th>Bills 2025</th><th>Bills 2026</th>'
+    +'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
   toast('✓ YoY tải xong');
 }
 

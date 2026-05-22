@@ -150,6 +150,14 @@ tr:hover td{background:#f8fffe}
 .err-p{background:var(--rl);border:1px solid rgba(220,38,38,.2);border-radius:10px;padding:14px 18px;margin-bottom:12px;display:flex;gap:10px}
 .err-p button{margin-top:7px;padding:4px 12px;background:var(--rd);color:#fff;border:none;border-radius:6px;font-family:var(--fn);font-size:12px;font-weight:700;cursor:pointer}
 @media(max-width:860px){.sb{display:none}.main{margin-left:0}.g2,.g3{grid-template-columns:1fr}}
+
+/* Chart annotation notes */
+.chart-note{
+  background:rgba(37,99,235,.06);border-left:3px solid var(--bl,#2563eb);
+  border-radius:0 6px 6px 0;padding:7px 12px;margin:0 18px 12px;
+  font-size:11px;color:var(--tx2,#5a6a7e);line-height:1.6;display:flex;gap:8px;align-items:flex-start;
+}
+.note-ico{flex-shrink:0;font-size:13px;margin-top:1px}
 </style>
 </head>
 <body>
@@ -210,8 +218,10 @@ tr:hover td{background:#f8fffe}
       <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--pu)"></div><span data-i="chart_tier_dist">Phân bổ hạng thẻ</span></div></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chTierOv"></canvas></div></div></div>
     </div>
     <div class="g2">
-      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--or)"></div><span data-i="chart_new_ret">KH mới vs quay lại theo tháng</span></div></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chNewRet"></canvas></div></div></div>
-      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--rd)"></div><span data-i="chart_churn_summary">Hành vi KH 2025 → 2026</span></div></div><div class="card-body" id="churnSumBody" style="padding:10px 14px"></div></div>
+      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--or)"></div><span data-i="chart_new_ret">KH mới vs quay lại theo tháng</span></div></div>
+    <div class="chart-note"><span class="note-ico">ℹ️</span><span data-i="note_churn_vs_active">DS đóng góp theo nhóm KH mới (tạo trong 2026) vs KH cũ (có data từ 2025). Tỷ lệ % tính trong từng tháng.</span></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chNewRet"></canvas></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--rd)"></div><span data-i="chart_churn_summary">Hành vi KH 2025 → 2026</span></div></div>
+    <div class="chart-note"><span class="note-ico">ℹ️</span><span data-i="note_churn_vs_active">Churn đo cả năm 2026; active rate đo từng tháng riêng — hai chiều khác nhau, không mâu thuẫn.</span></div><div class="card-body" id="churnSumBody" style="padding:10px 14px"></div></div>
     </div>
   </div>
 
@@ -246,7 +256,8 @@ tr:hover td{background:#f8fffe}
       <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--pu)"></div><span data-i="chart_tier_count">Số KH theo hạng thẻ</span></div></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chMemPie"></canvas></div></div></div>
       <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--or)"></div><span data-i="chart_tier_rev">DSTL 2026 theo hạng thẻ</span></div></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chMemRev"></canvas></div></div></div>
     </div>
-    <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--bl)"></div><span data-i="chart_tier_aov">AOV theo hạng thẻ × năm</span></div></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chTierAOV"></canvas></div></div></div>
+    <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--bl)"></div><span data-i="chart_tier_aov">AOV theo hạng thẻ × năm</span></div></div>
+    <div class="chart-note"><span class="note-ico">ℹ️</span><span data-i="note_basket">Basket = Giá trị TB mỗi giao dịch (Total Amount ÷ số bills). So sánh 2025 vs 2026.</span></div><div class="card-body"><div class="ch-wrap h280"><canvas id="chTierAOV"></canvas></div></div></div>
   </div>
 
   <!-- RFM -->
@@ -264,7 +275,8 @@ tr:hover td{background:#f8fffe}
       </div>
       <div class="card-body"><div class="seg-grid" id="rfmGrid"></div></div>
     </div>
-    <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--bl)"></div><span data-i="chart_rfm_dist">Phân bổ RFM Segments</span></div></div><div class="card-body"><div class="ch-wrap h320"><canvas id="chRFM"></canvas></div></div></div>
+    <div class="card"><div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--bl)"></div><span data-i="chart_rfm_dist">Phân bổ RFM Segments</span></div></div>
+    <div class="chart-note"><span class="note-ico">ℹ️</span><span data-i="note_rfm_score">R=Recency, F=Frequency, M=Monetary. Mỗi chiều chia NTILE 5. Điểm 5 = tốt nhất.</span></div><div class="card-body"><div class="ch-wrap h320"><canvas id="chRFM"></canvas></div></div></div>
   </div>
 
   <!-- CHURN -->
@@ -305,6 +317,7 @@ tr:hover td{background:#f8fffe}
           </div>
         </div>
         <div class="card-body"><div class="ch-wrap h320"><canvas id="chActiveTier"></canvas></div></div>
+    <div class="chart-note"><span class="note-ico">ℹ️</span><span data-i="note_active_rate">% KH trong base 2025 có giao dịch trong tháng đó của 2026. Mỗi tháng tính độc lập.</span></div>
       </div>
     </div>
   </div>
@@ -330,7 +343,7 @@ tr:hover td{background:#f8fffe}
         </div>
       </div>
       <div class="card hidden" id="khDetail">
-        <div class="card-head"><div class="card-ttl"><div class="dot"></div><span id="detailName">Chi tiết KH</span></div><button class="btn btn-out" onclick="G('khDetail').classList.add('hidden')">✕</button></div>
+        <div class="card-head"><div class="card-ttl"><div class="dot"></div><span id="detailName" data-i="lbl_customer_detail">Chi tiết KH</span></div><button class="btn btn-out" onclick="G('khDetail').classList.add('hidden')">✕</button></div>
         <div class="card-body" id="detailBody"></div>
       </div>
     </div>
@@ -340,9 +353,9 @@ tr:hover td{background:#f8fffe}
         <div class="card-body">
           <div class="frow">
             <span class="flbl" data-i="lbl_tier">Hạng thẻ:</span>
-            <select class="fsel" id="fTier"><option value="">Tất cả</option><option>VVIP</option><option>VIP</option><option>Member</option></select>
+            <select class="fsel" id="fTier"><option value="" data-i="lbl_all">Tất cả</option><option>VVIP</option><option>VIP</option><option>Member</option></select>
             <span class="flbl" data-i="lbl_status">Trạng thái:</span>
-            <select class="fsel" id="fStatus"><option value="">Tất cả</option><option value="Hoạt Động">Hoạt động</option><option value="Khoá">Khoá</option></select>
+            <select class="fsel" id="fStatus"><option value="" data-i="lbl_all">Tất cả</option><option value="Hoạt Động">Hoạt động</option><option value="Khoá">Khoá</option></select>
             <span class="flbl" data-i="lbl_branch">Chi nhánh:</span>
             <input type="text" class="finp" id="fBranch" placeholder="VD: 45" style="width:80px">
             <span class="flbl">DSTL ≥</span>
@@ -382,13 +395,13 @@ tr:hover td{background:#f8fffe}
       <div class="card-body">
         <div class="frow">
           <span class="flbl" data-i="lbl_tier">Hạng thẻ:</span>
-          <select class="fsel" id="segTier"><option value="">Tất cả</option><option>VVIP</option><option>VIP</option><option>Member</option></select>
+          <select class="fsel" id="segTier"><option value="" data-i="lbl_all">Tất cả</option><option>VVIP</option><option>VIP</option><option>Member</option></select>
           <span class="flbl" data-i="lbl_status">Trạng thái:</span>
-          <select class="fsel" id="segSts"><option value="">Tất cả</option><option value="Hoạt Động">Hoạt động</option><option value="Khoá">Khoá</option></select>
+          <select class="fsel" id="segSts"><option value="" data-i="lbl_all">Tất cả</option><option value="Hoạt Động">Hoạt động</option><option value="Khoá">Khoá</option></select>
           <span class="flbl" data-i="lbl_bought_2025">Mua 2025:</span>
-          <select class="fsel" id="segB25"><option value="">Không lọc</option><option value="true">Có mua</option><option value="false">Không mua</option></select>
+          <select class="fsel" id="segB25"><option value="" data-i="lbl_no_filter">Không lọc</option><option value="true">Có mua</option><option value="false">Không mua</option></select>
           <span class="flbl" data-i="lbl_bought_2026">Mua 2026:</span>
-          <select class="fsel" id="segB26"><option value="">Không lọc</option><option value="true">Có mua</option><option value="false">Không mua</option></select>
+          <select class="fsel" id="segB26"><option value="" data-i="lbl_no_filter">Không lọc</option><option value="true">Có mua</option><option value="false">Không mua</option></select>
           <span class="flbl">DSTL ≥</span>
           <input type="number" class="finp" id="segDstl" placeholder="VD: 1000000" style="width:120px">
         </div>
@@ -483,67 +496,314 @@ const DBG = {
 // ══════════════════════════════════════════════════════════
 const I18N = {
   vi:{
-    nav_overview:'Tổng quan',nav_analysis:'Phân tích KH',nav_tools:'Công cụ',
-    pg_overview:'CEO Dashboard',pg_revenue:'Doanh số & AOV',pg_membership:'Hạng thẻ',
-    pg_rfm:'RFM Analysis',pg_churn:'Churn & Retention',pg_cohort:'Cohort Analysis',
-    pg_search:'Tra cứu KH',pg_segment:'Segment Builder',pg_branches:'Chi nhánh',
-    kpi_total:'Tổng KH',kpi_active:'Active 90 ngày',kpi_tier:'VVIP / VIP',
-    kpi_rev25:'Doanh số 2025',kpi_rev26:'Doanh số 2026',kpi_aov:'AOV 2026',
-    kpi_churn:'Churn Rate',kpi_retained:'KH Retained',
-    tab_churn_all:'Tổng hợp',tab_churn_tier:'Theo hạng thẻ',tab_churn_active:'Active theo tháng',
-    tab_search_quick:'Tra cứu nhanh',tab_search_filter:'Lọc nâng cao',
-    lbl_tier:'Hạng thẻ:',lbl_status:'Trạng thái:',lbl_branch:'Chi nhánh:',
-    lbl_keyword:'Từ khoá:',lbl_year:'Năm:',lbl_month:'Tháng:',
-    lbl_date_from:'Từ ngày:',lbl_date_to:'Đến ngày:',
-    lbl_bought_2025:'Mua 2025:',lbl_bought_2026:'Mua 2026:',
-    btn_refresh:'Làm mới',btn_run:'Chạy',btn_filter:'Lọc',btn_reset:'Reset',
-    btn_export_csv:'Xuất CSV',btn_load_more:'Tải thêm',
+    // ── Navigation ──
+    nav_overview:'Tổng quan',
+    nav_analysis:'Phân tích KH',
+    nav_tools:'Công cụ',
+    // ── Pages ──
+    pg_overview:'Dashboard',
+    pg_revenue:'Doanh số & Basket',
+    pg_membership:'Hạng thẻ',
+    pg_rfm:'RFM Analysis',
+    pg_churn:'Churn & Retention',
+    pg_cohort:'Cohort Analysis',
+    pg_search:'Tra cứu KH',
+    pg_segment:'Segment Builder',
+    pg_branches:'Chi nhánh',
+    // ── KPIs ──
+    kpi_total:'Tổng KH',
+    kpi_active:'Active 90 ngày',
+    kpi_tier:'VVIP / VIP',
+    kpi_rev25:'Doanh số 2025',
+    kpi_rev26:'Doanh số 2026',
+    kpi_aov:'Basket 2026',
+    kpi_churn:'Churn Rate',
+    kpi_retained:'KH Retained',
+    // ── Chart titles ──
+    chart_revenue_monthly:'Doanh số theo tháng 2025 vs 2026',
+    chart_revenue_trend:'Xu hướng doanh số',
+    chart_tier_dist:'Phân bổ hạng thẻ 2026',
+    chart_tier_count:'Số KH theo hạng thẻ',
+    chart_tier_rev:'DSTL 2026 theo hạng thẻ',
+    chart_tier_aov:'Basket theo hạng thẻ × năm',
+    chart_new_ret:'KH mới vs quay lại theo tháng (2026)',
+    chart_churn_summary:'Hành vi KH 2025 → 2026',
+    chart_churn_pattern:'Pattern mua hàng 2026',
+    chart_churn_by_tier:'Churn theo hạng thẻ',
+    chart_active_by_tier:'Tỷ lệ KH active theo tháng 2026',
+    chart_monthly_active_rate:'Active Rate theo tháng',
+    chart_aov_dist:'Phân bổ Basket',
+    chart_freq:'Tần suất mua hàng (bills/KH)',
+    chart_rfm_dist:'Phân bổ RFM Segments',
+    branch_performance:'Hiệu suất Chi nhánh',
+    branch_table:'Bảng chi tiết Chi nhánh',
+    advanced_filter:'Lọc nâng cao',
+    cohort_subtitle:'Tỷ lệ % KH quay lại theo tháng kể từ lần mua đầu tiên',
+    // ── Tabs ──
+    tab_churn_all:'Tổng hợp',
+    tab_churn_tier:'Theo hạng thẻ',
+    tab_churn_active:'Active theo tháng',
+    tab_search_quick:'Tra cứu nhanh',
+    tab_search_filter:'Lọc nâng cao',
+    // ── Labels ──
+    lbl_tier:'Hạng thẻ:',
+    lbl_status:'Trạng thái:',
+    lbl_branch:'Chi nhánh:',
+    lbl_keyword:'Từ khoá:',
+    lbl_year:'Năm:',
+    lbl_month:'Tháng:',
+    lbl_date_from:'Từ ngày:',
+    lbl_date_to:'Đến ngày:',
+    lbl_bought_2025:'Mua 2025:',
+    lbl_bought_2026:'Mua 2026:',
+    // ── Options ──
+    opt_all_months:'Tất cả tháng',
+    opt_all_years:'Tất cả năm',
+    // ── Buttons ──
+    btn_refresh:'Làm mới',
+    btn_run:'Chạy',
+    btn_filter:'Lọc',
+    btn_reset:'Đặt lại',
+    btn_export_csv:'Xuất CSV',
+    btn_load_more:'Tải thêm',
+    // ── Misc ──
     filter_results:'Kết quả lọc',
+    search_by_name_phone:'Tìm theo tên / SĐT / Mã KH',
+    lbl_connecting:'Đang kết nối...',
+    lbl_system_overview:'Tổng quan toàn hệ thống',
+    lbl_customer_detail:'Chi tiết khách hàng',
+    lbl_all:'Tất cả',
+    lbl_active:'Hoạt động',
+    lbl_locked:'Khoá',
+    lbl_no_filter:'Không lọc',
+    lbl_bought:'Có mua',
+    lbl_not_bought:'Không mua',
+    lbl_both_years:'Cả 2 năm',
+    lbl_results:'Kết quả',
+    lbl_not_found:'Không tìm thấy',
+    lbl_load_more:'⬇ Tải thêm',
+    lbl_rfm_loading:'Đang tính RFM — khoảng 30–60 giây...',
+    // ── Chart tooltips & notes ──
+    note_active_rate:'% KH trong base 2025 có giao dịch trong tháng đó của 2026. Mỗi tháng tính độc lập — KH chỉ mua T1 vẫn được tính active T1.',
+    note_churn_vs_active:'67.8% không mua cả năm 2026 ≠ mâu thuẫn với active rate cao theo tháng. Active rate đo từng tháng riêng lẻ; churn đo cả năm.',
+    note_rfm_score:'R=Recency (mua gần đây), F=Frequency (tần suất), M=Monetary (giá trị). Mỗi chiều chia NTILE 5 — điểm 5 là tốt nhất.',
+    note_cohort:'Mỗi hàng = nhóm KH có lần mua đầu tiên trong tháng đó. Cột = tháng thứ N kể từ lần mua đầu. % = tỷ lệ quay lại.',
+    note_basket:'Basket = Giá trị trung bình mỗi giao dịch (Total Amount / số bills).',
   },
+
   en:{
-    nav_overview:'Overview',nav_analysis:'Customer Analysis',nav_tools:'Tools',
-    pg_overview:'CEO Dashboard',pg_revenue:'Revenue & AOV',pg_membership:'Membership',
-    pg_rfm:'RFM Analysis',pg_churn:'Churn & Retention',pg_cohort:'Cohort Analysis',
-    pg_search:'Customer Lookup',pg_segment:'Segment Builder',pg_branches:'Branches',
-    kpi_total:'Total Customers',kpi_active:'Active 90d',kpi_tier:'VVIP / VIP',
-    kpi_rev25:'Revenue 2025',kpi_rev26:'Revenue 2026',kpi_aov:'AOV 2026',
-    kpi_churn:'Churn Rate',kpi_retained:'Retained',
-    tab_churn_all:'All',tab_churn_tier:'By Tier',tab_churn_active:'Active by Month',
-    tab_search_quick:'Quick Search',tab_search_filter:'Advanced Filter',
-    lbl_tier:'Tier:',lbl_status:'Status:',lbl_branch:'Branch:',
-    lbl_keyword:'Keyword:',lbl_year:'Year:',lbl_month:'Month:',
-    lbl_date_from:'From:',lbl_date_to:'To:',
-    lbl_bought_2025:'Bought 2025:',lbl_bought_2026:'Bought 2026:',
-    btn_refresh:'Refresh',btn_run:'Run',btn_filter:'Filter',btn_reset:'Reset',
-    btn_export_csv:'Export CSV',btn_load_more:'Load More',
+    // ── Navigation ──
+    nav_overview:'Overview',
+    nav_analysis:'Customer Analytics',
+    nav_tools:'Tools',
+    // ── Pages ──
+    pg_overview:'Dashboard',
+    pg_revenue:'Revenue & Basket',
+    pg_membership:'Membership',
+    pg_rfm:'RFM Analysis',
+    pg_churn:'Churn & Retention',
+    pg_cohort:'Cohort Analysis',
+    pg_search:'Customer Lookup',
+    pg_segment:'Segment Builder',
+    pg_branches:'Branches',
+    // ── KPIs ──
+    kpi_total:'Total Customers',
+    kpi_active:'Active 90d',
+    kpi_tier:'VVIP / VIP',
+    kpi_rev25:'Revenue 2025',
+    kpi_rev26:'Revenue 2026',
+    kpi_aov:'Basket 2026',
+    kpi_churn:'Churn Rate',
+    kpi_retained:'Retained',
+    // ── Chart titles ──
+    chart_revenue_monthly:'Monthly Revenue 2025 vs 2026',
+    chart_revenue_trend:'Revenue Trend',
+    chart_tier_dist:'Membership Distribution 2026',
+    chart_tier_count:'Customers by Tier',
+    chart_tier_rev:'Revenue 2026 by Tier',
+    chart_tier_aov:'Basket by Tier × Year',
+    chart_new_ret:'New vs Returning Customers (2026)',
+    chart_churn_summary:'Customer Behavior 2025 → 2026',
+    chart_churn_pattern:'Purchase Pattern 2026',
+    chart_churn_by_tier:'Churn by Membership Tier',
+    chart_active_by_tier:'Monthly Active Rate by Tier (2026)',
+    chart_monthly_active_rate:'Monthly Active Rate',
+    chart_aov_dist:'Basket Distribution',
+    chart_freq:'Purchase Frequency (bills/customer)',
+    chart_rfm_dist:'RFM Segment Distribution',
+    branch_performance:'Branch Performance',
+    branch_table:'Branch Detail Table',
+    advanced_filter:'Advanced Filter',
+    cohort_subtitle:'% of customers returning each month since their first purchase',
+    // ── Tabs ──
+    tab_churn_all:'Summary',
+    tab_churn_tier:'By Tier',
+    tab_churn_active:'Active by Month',
+    tab_search_quick:'Quick Search',
+    tab_search_filter:'Advanced Filter',
+    // ── Labels ──
+    lbl_tier:'Tier:',
+    lbl_status:'Status:',
+    lbl_branch:'Branch:',
+    lbl_keyword:'Keyword:',
+    lbl_year:'Year:',
+    lbl_month:'Month:',
+    lbl_date_from:'From:',
+    lbl_date_to:'To:',
+    lbl_bought_2025:'Bought 2025:',
+    lbl_bought_2026:'Bought 2026:',
+    // ── Options ──
+    opt_all_months:'All months',
+    opt_all_years:'All years',
+    // ── Buttons ──
+    btn_refresh:'Refresh',
+    btn_run:'Run',
+    btn_filter:'Filter',
+    btn_reset:'Reset',
+    btn_export_csv:'Export CSV',
+    btn_load_more:'Load More',
+    // ── Misc ──
     filter_results:'Filter Results',
+    search_by_name_phone:'Search by name / phone / customer ID',
+    lbl_connecting:'Connecting...',
+    lbl_system_overview:'System Overview',
+    lbl_customer_detail:'Customer Detail',
+    lbl_all:'All',
+    lbl_active:'Active',
+    lbl_locked:'Locked',
+    lbl_no_filter:'No filter',
+    lbl_bought:'Purchased',
+    lbl_not_bought:'Not purchased',
+    lbl_both_years:'Both years',
+    lbl_results:'Results',
+    lbl_not_found:'Not found',
+    lbl_load_more:'⬇ Load more',
+    lbl_rfm_loading:'Calculating RFM — approx. 30–60 seconds...',
+    // ── Chart notes ──
+    note_active_rate:'% of 2025 base customers who transacted in that specific month of 2026. Each month is independent — a customer buying only in Jan still counts as Jan-active.',
+    note_churn_vs_active:'67.8% not buying in full year 2026 does NOT contradict high monthly active rates. Active rate measures each month separately; churn measures the whole year.',
+    note_rfm_score:'R=Recency (how recently purchased), F=Frequency (how often), M=Monetary (how much). Each dimension split into NTILE 5 — score 5 is best.',
+    note_cohort:'Each row = customers whose first purchase was in that month. Columns = months since first purchase. % = retention rate.',
+    note_basket:'Basket = Average transaction value (Total Amount ÷ number of bills).',
   },
+
   ko:{
-    nav_overview:'개요',nav_analysis:'고객 분석',nav_tools:'도구',
-    pg_overview:'CEO 대시보드',pg_revenue:'매출 & AOV',pg_membership:'회원 등급',
-    pg_rfm:'RFM 분석',pg_churn:'이탈 & 유지',pg_cohort:'코호트 분석',
-    pg_search:'고객 조회',pg_segment:'세그먼트',pg_branches:'지점',
-    kpi_total:'전체 고객',kpi_active:'90일 활성',kpi_tier:'VVIP / VIP',
-    kpi_rev25:'2025 매출',kpi_rev26:'2026 매출',kpi_aov:'2026 AOV',
-    kpi_churn:'이탈률',kpi_retained:'유지 고객',
-    tab_churn_all:'전체',tab_churn_tier:'등급별',tab_churn_active:'월별 활성',
-    tab_search_quick:'빠른 검색',tab_search_filter:'고급 필터',
-    lbl_tier:'등급:',lbl_status:'상태:',lbl_branch:'지점:',
-    lbl_keyword:'키워드:',lbl_year:'연도:',lbl_month:'월:',
-    lbl_date_from:'시작일:',lbl_date_to:'종료일:',
-    lbl_bought_2025:'2025 구매:',lbl_bought_2026:'2026 구매:',
-    btn_refresh:'새로 고침',btn_run:'실행',btn_filter:'필터',btn_reset:'초기화',
-    btn_export_csv:'CSV 내보내기',btn_load_more:'더 불러오기',
+    // ── 탐색 ──
+    nav_overview:'개요',
+    nav_analysis:'고객 분석',
+    nav_tools:'도구',
+    // ── 페이지 ──
+    pg_overview:'대시보드',
+    pg_revenue:'매출 & Basket',
+    pg_membership:'회원 등급',
+    pg_rfm:'RFM 분석',
+    pg_churn:'이탈 & 유지',
+    pg_cohort:'코호트 분석',
+    pg_search:'고객 조회',
+    pg_segment:'세그먼트',
+    pg_branches:'지점',
+    // ── KPI ──
+    kpi_total:'전체 고객',
+    kpi_active:'90일 활성',
+    kpi_tier:'VVIP / VIP',
+    kpi_rev25:'2025 매출',
+    kpi_rev26:'2026 매출',
+    kpi_aov:'2026 Basket',
+    kpi_churn:'이탈률',
+    kpi_retained:'유지 고객',
+    // ── 차트 제목 ──
+    chart_revenue_monthly:'월별 매출 2025 vs 2026',
+    chart_revenue_trend:'매출 추세',
+    chart_tier_dist:'2026 회원 등급 분포',
+    chart_tier_count:'등급별 고객 수',
+    chart_tier_rev:'등급별 2026 매출',
+    chart_tier_aov:'등급 × 연도별 Basket',
+    chart_new_ret:'신규 vs 재방문 고객 (2026)',
+    chart_churn_summary:'고객 행동 2025 → 2026',
+    chart_churn_pattern:'2026 구매 패턴',
+    chart_churn_by_tier:'등급별 이탈 현황',
+    chart_active_by_tier:'등급별 월간 활성률 (2026)',
+    chart_monthly_active_rate:'월별 활성률',
+    chart_aov_dist:'Basket 분포',
+    chart_freq:'구매 빈도 (청구서/고객)',
+    chart_rfm_dist:'RFM 세그먼트 분포',
+    branch_performance:'지점 성과',
+    branch_table:'지점 상세 테이블',
+    advanced_filter:'고급 필터',
+    cohort_subtitle:'첫 구매 이후 매월 재방문 고객 비율',
+    // ── 탭 ──
+    tab_churn_all:'전체 요약',
+    tab_churn_tier:'등급별',
+    tab_churn_active:'월별 활성',
+    tab_search_quick:'빠른 검색',
+    tab_search_filter:'고급 필터',
+    // ── 레이블 ──
+    lbl_tier:'등급:',
+    lbl_status:'상태:',
+    lbl_branch:'지점:',
+    lbl_keyword:'키워드:',
+    lbl_year:'연도:',
+    lbl_month:'월:',
+    lbl_date_from:'시작일:',
+    lbl_date_to:'종료일:',
+    lbl_bought_2025:'2025 구매:',
+    lbl_bought_2026:'2026 구매:',
+    // ── 옵션 ──
+    opt_all_months:'전체 월',
+    opt_all_years:'전체 연도',
+    // ── 버튼 ──
+    btn_refresh:'새로 고침',
+    btn_run:'실행',
+    btn_filter:'필터',
+    btn_reset:'초기화',
+    btn_export_csv:'CSV 내보내기',
+    btn_load_more:'더 불러오기',
+    // ── 기타 ──
     filter_results:'필터 결과',
+    search_by_name_phone:'이름 / 전화번호 / 고객 ID 검색',
+    lbl_connecting:'연결 중...',
+    lbl_system_overview:'시스템 전체 현황',
+    lbl_customer_detail:'고객 상세 정보',
+    lbl_all:'전체',
+    lbl_active:'활성',
+    lbl_locked:'잠금',
+    lbl_no_filter:'필터 없음',
+    lbl_bought:'구매함',
+    lbl_not_bought:'구매 안 함',
+    lbl_both_years:'2년 모두',
+    lbl_results:'결과',
+    lbl_not_found:'찾을 수 없음',
+    lbl_load_more:'⬇ 더 불러오기',
+    lbl_rfm_loading:'RFM 계산 중 — 약 30~60초 소요...',
+    // ── 차트 주석 ──
+    note_active_rate:'2025 기준 고객 중 해당 월(2026)에 거래한 고객 비율. 각 월은 독립적으로 계산 — 1월에만 구매해도 1월 활성으로 집계.',
+    note_churn_vs_active:'2026년 전체 미구매 67.8%는 높은 월별 활성률과 모순되지 않음. 활성률은 각 월 단위, 이탈률은 연간 단위로 측정.',
+    note_rfm_score:'R=최근성(최근 구매일), F=빈도(구매 횟수), M=금액(구매 총액). 각 지표를 NTILE 5로 분류 — 5점이 최고.',
+    note_cohort:'각 행 = 해당 월에 첫 구매한 고객 그룹. 열 = 첫 구매 이후 N번째 월. % = 재방문율.',
+    note_basket:'Basket = 평균 거래 금액 (총 매출 ÷ 청구서 수).',
   },
 };
 let LANG='vi';
 function T(k){return I18N[LANG]?.[k]||I18N.vi[k]||k;}
 function setLang(lang){
   LANG=lang;
+  localStorage.setItem('crm_lang',lang);
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on',
     b.textContent.trim()===(lang==='ko'?'한':lang.toUpperCase())));
-  document.querySelectorAll('[data-i]').forEach(el=>{const v=T(el.dataset.i);if(v)el.textContent=v;});
+  document.querySelectorAll('[data-i]').forEach(el=>{
+    const v=T(el.dataset.i);
+    if(!v) return;
+    // input/select: đổi placeholder; option: đổi text; còn lại: đổi textContent
+    if(el.tagName==='INPUT') el.placeholder=v;
+    else if(el.tagName==='OPTION') el.textContent=v;
+    else el.textContent=v;
+  });
+  // Đổi placeholder của search input
+  const si=document.getElementById('srchInput');
+  if(si) si.placeholder=T('search_by_name_phone');
+  // Re-render page title in topbar nếu có
+  const tb=document.getElementById('pgTitle');
+  if(tb && curPage) tb.textContent=T('pg_'+curPage)||tb.textContent;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1222,6 +1482,9 @@ window.addEventListener('DOMContentLoaded',()=>{
   loadPage('overview');
 
   DBG.ok('Init xong — UI sẵn sàng');
+  // Restore ngôn ngữ đã chọn
+  const savedLang=localStorage.getItem('crm_lang');
+  if(savedLang && savedLang!=='vi') setLang(savedLang);
 });
 </script>
 </body>

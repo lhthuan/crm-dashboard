@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="build-version" content="260522-0900">
+<meta name="build-version" content="260522-1000">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ecom CRM Analytics</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -420,7 +420,7 @@ tr:hover td{background:#f8fffe}
           <span class="flbl" data-i="lbl_year">Năm:</span>
           <select class="fsel" id="selBrYr" onchange="loadBranches()"><option value="0">Cả 2 năm</option><option value="2025">2025</option><option value="2026">2026</option></select>
           <span class="flbl" data-i="lbl_month">Tháng:</span>
-          <select class="fsel" id="selBrMon" onchange="loadBranches()"><option value="0">Tất cả</option><option value="1">T1</option><option value="2">T2</option><option value="3">T3</option><option value="4">T4</option><option value="5">T5</option><option value="6">T6</option><option value="7">T7</option><option value="8">T8</option><option value="9">T9</option><option value="10">T10</option><option value="11">T11</option><option value="12">T12</option></select>
+          <select class="fsel" id="selBrMon" style="display:none" onchange="loadBranches()"><option value="0">Tất cả</option><option value="1">T1</option><option value="2">T2</option><option value="3">T3</option><option value="4">T4</option><option value="5">T5</option><option value="6">T6</option><option value="7">T7</option><option value="8">T8</option><option value="9">T9</option><option value="10">T10</option><option value="11">T11</option><option value="12">T12</option></select>
         </div>
       </div>
       <div class="card-body"><div class="ch-wrap h340"><canvas id="chBranch"></canvas></div></div>
@@ -518,6 +518,33 @@ tr:hover td{background:#f8fffe}
   <!-- YoY BRANCHES -->
   <div id="pgYoy" class="hidden">
     <div class="kpi-grid" id="yoyKpi"></div>
+    <!-- YoY period selector -->
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-body" style="padding:12px 18px">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:700;color:var(--tx2)">So sánh kỳ:</span>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+            <input type="radio" name="yoyPeriod" value="same" checked onchange="onYoYPeriodChange()">
+            Cùng kỳ (Jan–May 2025 vs Jan–May 2026)
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+            <input type="radio" name="yoyPeriod" value="full" onchange="onYoYPeriodChange()">
+            Cả năm 2025 vs Jan–May 2026
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+            <input type="radio" name="yoyPeriod" value="q1" onchange="onYoYPeriodChange()">
+            Q1 (Jan–Mar)
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+            <input type="radio" name="yoyPeriod" value="q1q2" onchange="onYoYPeriodChange()">
+            Q1+Q2 một phần (Jan–May)
+          </label>
+          <span id="yoyPeriodNote" style="font-size:11px;color:var(--tx3);font-family:var(--mn)">
+            ⓘ So sánh cùng kỳ để loại trừ yếu tố mùa vụ
+          </span>
+        </div>
+      </div>
+    </div>
     <div class="card">
       <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--gr)"></div>Tăng trưởng Doanh số 2025 vs 2026 theo Chi nhánh</div></div>
       <div class="card-body"><div class="ch-wrap h340" data-canvas-id="chYoyRev"><canvas id="chYoyRev"></canvas></div></div>
@@ -1286,23 +1313,62 @@ function renderCohort(data){
   G('cohortBody').innerHTML=`<p style="font-size:11px;color:var(--tx3);margin-bottom:8px">🟢≥70% 🟡30-70% 🔴&lt;30%</p><table style="border-collapse:collapse"><thead>${th}</thead><tbody>${tb}</tbody></table>`;
 }
 function renderBranchChart(data){
-  dc('chBranch');
-  CH['chBranch']=new Chart(G('chBranch'),{type:'bar',data:{labels:data.map(d=>d.Store_Name||d.Store_No||'?'),datasets:[
-    {label:'VVIP',data:data.map(d=>+(d.rev_vvip/1e6).toFixed(1)),backgroundColor:'#f59e0b',stack:'s'},
-    {label:'VIP', data:data.map(d=>+(d.rev_vip/1e6).toFixed(1)), backgroundColor:'#7c3aed',stack:'s'},
-    {label:'Member',data:data.map(d=>+(d.rev_member/1e6).toFixed(1)),backgroundColor:'#16a34a',stack:'s'},
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{mode:'index',callbacks:{label:ctx=>{const d=data[ctx.dataIndex];const tier=ctx.dataset.label;const bills=tier==='VVIP'?d.bills_vvip:tier==='VIP'?d.bills_vip:d.bills_member;const aov=tier==='VVIP'?d.aov_vvip:tier==='VIP'?d.aov_vip:d.aov_member;return `${tier}: ${fv((ctx.raw||0)*1e6)} | ${fn(bills)} bills | AOV:${fv(aov)}`;},}}},scales:{x:{stacked:true,grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{stacked:true,grid:{color:'rgba(0,0,0,.04)'},title:{display:true,text:'Triệu VND'}}}}});
-}
-function renderBranchTable(data){
-  G('branchTable').innerHTML=`<div style="overflow-x:auto"><table>
-    <thead><tr><th>#</th><th>Chi nhánh</th><th>Tổng DS</th><th>Bills</th><th style="color:#f59e0b">VVIP DS</th><th style="color:#7c3aed">VIP DS</th><th style="color:#16a34a">Member DS</th></tr></thead>
-    <tbody>${data.map((r,i)=>`<tr><td class="tbl-num">${i+1}</td><td style="font-weight:600">${r.Store_Name||r.Store_No}</td><td class="tbl-num">${fv(r.revenue_total)}</td><td class="tbl-num">${fn(r.bills_total)}</td><td style="color:#f59e0b;font-family:var(--mn)">${fv(r.rev_vvip)}</td><td style="color:#7c3aed;font-family:var(--mn)">${fv(r.rev_vip)}</td><td style="color:#16a34a;font-family:var(--mn)">${fv(r.rev_member)}</td></tr>`).join('')}</tbody>
-  </table></div>`;
+  const hasTier = data.length && data[0].rev_vvip != null;
+  const labels = data.map(d=>d.Store_Name||d.Store_No);
+  safeChart('chBranch', hasTier ? {
+    type:'bar',
+    data:{labels, datasets:[
+      {label:'VVIP', data:data.map(d=>+(d.rev_vvip/1e9).toFixed(2)), backgroundColor:'#f59e0b', borderRadius:3, stack:'s'},
+      {label:'VIP',  data:data.map(d=>+(d.rev_vip/1e9).toFixed(2)),  backgroundColor:'#7c3aed', borderRadius:3, stack:'s'},
+      {label:'Member',data:data.map(d=>+(d.rev_member/1e9).toFixed(2)),backgroundColor:'#16a34a',borderRadius:3, stack:'s'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top'},tooltip:{mode:'index'}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},
+              y:{stacked:true,title:{display:true,text:'Tỷ VND'},grid:{color:'rgba(0,0,0,.04)'}}}}
+  } : {
+    type:'bar',
+    data:{labels, datasets:[
+      {label:'Doanh số (tỷ)', data:data.map(d=>+((d.revenue||0)/1e9).toFixed(2)),
+       backgroundColor:'rgba(22,163,74,.7)', borderRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        afterLabel:ctx=>{const d=data[ctx.dataIndex];
+          return [`Bills: ${fn(d.bills||0)}`,`KH: ${fn(d.customers||0)}`,`Basket: ${fv(d.aov||0)}`];}
+      }}},
+      scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},
+              y:{title:{display:true,text:'Tỷ VND'},grid:{color:'rgba(0,0,0,.04)'}}}}
+  });
 }
 
-// ══════════════════════════════════════════════════════════
-//  SEARCH
-// ══════════════════════════════════════════════════════════
+function renderBranchTable(data){
+  // Hỗ trợ cả v1 (revenue/by-store) và v2 (branches/by-tier)
+  const hasTier = data.length && data[0].rev_vvip != null;
+  const rows = data.map((d,i)=>{
+    const tierCols = hasTier
+      ? `<td class="tbl-num" style="color:#f59e0b">${fv(d.rev_vvip||0)}</td>
+         <td class="tbl-num" style="color:#7c3aed">${fv(d.rev_vip||0)}</td>
+         <td class="tbl-num" style="color:#16a34a">${fv(d.rev_member||0)}</td>`
+      : `<td class="tbl-num" colspan="3" style="color:var(--tx3);font-size:11px">—</td>`;
+    return `<tr>
+      <td class="tbl-num" style="color:var(--tx3)">${i+1}</td>
+      <td style="font-weight:600">${d.Store_Name||d.Store_No}</td>
+      <td class="tbl-num" style="font-weight:700">${fv(d.revenue||d.revenue_total||0)}</td>
+      <td class="tbl-num">${fn(d.bills||d.bills_total||0)}</td>
+      ${tierCols}
+      <td class="tbl-num">${fn(d.customers||0)}</td>
+    </tr>`;
+  }).join('');
+  const tierHeader = hasTier
+    ? '<th style="color:#f59e0b">VVIP DS</th><th style="color:#7c3aed">VIP DS</th><th style="color:#16a34a">Member DS</th>'
+    : '<th colspan="3" style="color:var(--tx3)">Tier (không có)</th>';
+  G('branchTable').innerHTML=`<div style="overflow-x:auto"><table>
+    <thead><tr><th>#</th><th>Chi nhánh</th><th>Tổng DS</th><th>Bills</th>
+    ${tierHeader}<th>KH</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
 function switchChurnTab(tab,btn){document.querySelectorAll('#churnTabs .tab-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');G('churnPanAll').classList.toggle('hidden',tab!=='all');G('churnPanTier').classList.toggle('hidden',tab!=='tier');G('churnPanActive').classList.toggle('hidden',tab!=='active');}
 function switchSearchTab(tab,btn){document.querySelectorAll('#pgSearch .tab-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');G('srchPanQuick').classList.toggle('hidden',tab!=='quick');G('srchPanFilter').classList.toggle('hidden',tab!=='filter');}
 
@@ -1481,11 +1547,14 @@ function loading(msg='Đang tính số liệu...'){
   </div>`;
 }
 
-/** Hiện loading vào wrap của canvas, giữ data-canvas-id để restore được */
+/** Hiện loading vào wrap của canvas, giữ data-canvas-id sau innerHTML */
 function showLoading(canvasId, msg){
   const el = G(canvasId);
   const wrap = el ? el.parentElement : document.querySelector(`[data-canvas-id="${canvasId}"]`);
-  if(wrap){ wrap.innerHTML = loading(msg); wrap.dataset.canvasId = canvasId; }
+  if(wrap){
+    wrap.innerHTML = loading(msg);
+    wrap.setAttribute('data-canvas-id', canvasId); // re-set vì innerHTML xóa dataset
+  }
 }
 
 /** Restore canvas vào wrap, trả về canvas element hoặc null */
@@ -1866,13 +1935,36 @@ function exportAlertList(){
 // ══════════════════════════════════════════════════════════
 //  YoY BRANCH COMPARISON
 // ══════════════════════════════════════════════════════════
+function onYoYPeriodChange(){
+  DATA.yoy=null; // clear cache khi đổi period
+  loadYoY();
+}
+
+function getYoYParams(){
+  const period = document.querySelector('input[name="yoyPeriod"]:checked')?.value || 'same';
+  const noteEl = G('yoyPeriodNote');
+  const params = {
+    same:  {m_from:1, m_to:5,  note:'So sánh Jan–May 2025 vs Jan–May 2026 (cùng kỳ)'},
+    full:  {m_from:1, m_to:12, note:'⚠ Cả năm 2025 vs Jan–May 2026 — không công bằng'},
+    q1:    {m_from:1, m_to:3,  note:'Q1: Jan–Mar 2025 vs Jan–Mar 2026'},
+    q1q2:  {m_from:1, m_to:5,  note:'Jan–May 2025 vs Jan–May 2026'},
+  }[period] || {m_from:1, m_to:5, note:''};
+  if(noteEl) noteEl.textContent = 'ⓘ '+params.note;
+  return params;
+}
+
 async function loadYoY(){
   DBG.log('loadYoY start');
   G('yoyKpi').innerHTML='';
   G('yoyTable').innerHTML='';
   ['chYoyRev','chYoyGrowth','chYoyKH'].forEach(id=>showLoading(id,'Đang tính YoY...'));
   try{
-    if(!DATA.yoy) DATA.yoy=await api('/api/v2/branches/yoy?top_n=20',30000);
+    const {m_from, m_to} = getYoYParams();
+    const cacheKey = `yoy_${m_from}_${m_to}`;
+    if(!DATA[cacheKey]) DATA[cacheKey]=await api(
+      `/api/v2/branches/yoy?top_n=20&m_from=${m_from}&m_to=${m_to}`,30000
+    );
+    DATA.yoy = DATA[cacheKey];
     renderYoY(DATA.yoy);
     DBG.ok('loadYoY done');
   }catch(e){ DBG.err('loadYoY: '+e.message); showErr('pgYoy',e.message,'loadYoY'); }

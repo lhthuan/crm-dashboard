@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="build-version" content="260522-1000">
+<meta name="build-version" content="260522-1200">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ecom CRM Analytics</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1126,8 +1126,7 @@ function renderTierPie(data,id){
   }}});
 }
 function renderMemRev(data){
-  dc('chMemRev');
-  CH['chMemRev']=new Chart(G('chMemRev'),{type:'bar',data:{
+  safeChart('chMemRev',{type:'bar',data:{
     labels:data.map(d=>d.tier),
     datasets:[{
       label:'DSTL 2026 (tỷ)',
@@ -1151,30 +1150,39 @@ function renderMemRev(data){
 }
 function renderTierAOV(data){
   dc('chTierAOV');
+  const canvas = G('chTierAOV');
+  if(!canvas){ DBG.err('chTierAOV not found'); return; }
+  const ov = canvas.parentElement && canvas.parentElement.querySelector('.ch-loading-ov');
+  if(ov) ov.remove();
+  canvas.style.display='';
   const tiers=[...new Set(data.map(d=>d.tier))];
-  CH['chTierAOV']=new Chart(G('chTierAOV'),{type:'bar',data:{labels:tiers,datasets:[
-    {label:'2025',data:tiers.map(t=>{const r=data.find(d=>d.tier===t&&d.year===2025);return r?r.aov:null;}),backgroundColor:'rgba(37,99,235,.65)',borderRadius:5},
-    {label:'2026',data:tiers.map(t=>{const r=data.find(d=>d.tier===t&&d.year===2026);return r?r.aov:null;}),backgroundColor:'rgba(22,163,74,.65)',borderRadius:5},
-  ]},options:{responsive:true,maintainAspectRatio:false,
-    plugins:{
-      legend:{position:'top'},
-      tooltip:{callbacks:{
-        label: ctx=>`Basket ${ctx.dataset.label}: ${fv(ctx.raw)}`,
-        afterLabel: ctx=>{
-          const yr=parseInt(ctx.dataset.label);
-          const tier=tiers[ctx.dataIndex];
-          const row=data.find(d=>d.tier===tier&&d.year===yr);
-          if(!row) return [];
-          return [
-            `SL KH: ${fn(row.customers)}`,
-            `Tổng bills: ${fn(row.bills)}`,
-            `DS/KH: ${fv(row.revenue_per_customer)}`,
-          ];
-        }
-      }}
+  CH['chTierAOV']=new Chart(canvas,{
+    type:'bar',
+    data:{
+      labels:tiers,
+      datasets:[
+        {label:'2025',data:tiers.map(t=>{const r=data.find(d=>d.tier===t&&d.year===2025);return r?r.aov:null;}),backgroundColor:'rgba(37,99,235,.65)',borderRadius:5},
+        {label:'2026',data:tiers.map(t=>{const r=data.find(d=>d.tier===t&&d.year===2026);return r?r.aov:null;}),backgroundColor:'rgba(22,163,74,.65)',borderRadius:5},
+      ]
     },
-    scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>fv(v)},title:{display:true,text:'VND'}}}
-  }});
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top'},
+        tooltip:{callbacks:{
+          label:function(ctx){ return 'Basket '+ctx.dataset.label+': '+fv(ctx.raw); },
+          afterLabel:function(ctx){
+            const yr=parseInt(ctx.dataset.label);
+            const tier=tiers[ctx.dataIndex];
+            const row=data.find(function(d){return d.tier===tier&&d.year===yr;});
+            if(!row) return [];
+            return ['SL KH: '+fn(row.customers),'Tổng bills: '+fn(row.bills),'DS/KH: '+fv(row.revenue_per_customer)];
+          }
+        }}
+      },
+      scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:function(v){return fv(v);}},title:{display:true,text:'VND'}}}
+    }
+  });
 }
 function renderRFM(data){
   G('rfmGrid').innerHTML=data.map(s=>`
@@ -1547,36 +1555,46 @@ function loading(msg='Đang tính số liệu...'){
   </div>`;
 }
 
-/** Hiện loading vào wrap của canvas, giữ data-canvas-id sau innerHTML */
+/**
+ * showLoading: thêm overlay loading lên wrap, KHÔNG xóa canvas
+ * → canvas vẫn còn trong DOM → safeChart luôn tìm thấy
+ */
 function showLoading(canvasId, msg){
-  const el = G(canvasId);
-  const wrap = el ? el.parentElement : document.querySelector(`[data-canvas-id="${canvasId}"]`);
-  if(wrap){
-    wrap.innerHTML = loading(msg);
-    wrap.setAttribute('data-canvas-id', canvasId); // re-set vì innerHTML xóa dataset
+  const canvas = G(canvasId);
+  if(!canvas) return;
+  const wrap = canvas.parentElement;
+  if(!wrap) return;
+  // Ẩn canvas, show overlay
+  canvas.style.display='none';
+  let ov = wrap.querySelector('.ch-loading-ov');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.className='ch-loading-ov';
+    ov.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:200px;color:var(--tx2)';
+    wrap.appendChild(ov);
   }
+  ov.innerHTML='<div style="font-size:24px;margin-bottom:10px">⏳</div>'
+    +'<div style="font-weight:700;font-size:13px;margin-bottom:4px">'+msg+'</div>'
+    +'<div style="font-size:11px;color:var(--tx3);font-family:var(--mn)">Vui lòng chờ...</div>';
+  ov.style.display='flex';
 }
 
-/** Restore canvas vào wrap, trả về canvas element hoặc null */
-function restoreCanvas(canvasId){
-  const wrap = document.querySelector(`[data-canvas-id="${canvasId}"]`);
-  if(!wrap) return null;
-  // Nếu canvas đã có → dùng lại
-  let canvas = wrap.querySelector(`canvas#${canvasId}`);
-  if(!canvas){
-    canvas = document.createElement('canvas');
-    canvas.id = canvasId;
-    wrap.innerHTML='';
-    wrap.appendChild(canvas);
-  }
-  return canvas;
-}
-
-/** Tạo/restore chart an toàn — không bao giờ null */
+/**
+ * safeChart: đơn giản — tìm canvas bằng ID, xóa overlay, vẽ chart
+ * Không cần restoreCanvas, không cần data-canvas-id
+ */
 function safeChart(canvasId, config){
-  dc(canvasId); // destroy old chart
-  const canvas = restoreCanvas(canvasId);
-  if(!canvas){ DBG.err('safeChart: cannot find wrap for '+canvasId); return null; }
+  dc(canvasId);
+  const canvas = G(canvasId);
+  if(!canvas){
+    DBG.err('safeChart: canvas #'+canvasId+' not found in DOM');
+    return null;
+  }
+  // Xóa overlay loading nếu có
+  const ov = canvas.parentElement?.querySelector('.ch-loading-ov');
+  if(ov) ov.remove();
+  // Hiện lại canvas
+  canvas.style.display='';
   CH[canvasId] = new Chart(canvas, config);
   return CH[canvasId];
 }

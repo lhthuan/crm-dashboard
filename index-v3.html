@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="build-version" content="260524-1000">
+<meta name="build-version" content="260524-1300">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ecom CRM Analytics</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -197,7 +197,7 @@ tr:hover td{background:#f8fffe}
 </aside>
 
 <main class="main">
-  <div id="cacheBar" class="cache-bar bld"><span class="cdot"></span><span id="cacheTxt" data-i="lbl_connecting">Đang kết nối...</span></div>
+  <div id="cacheBar" class="cache-bar bld"><span class="cdot"></span><span id="cacheTxt">Đang kết nối...</span></div>
   <div class="topbar">
     <span style="font-size:16px" id="tbIco">📊</span>
     <div><div class="tb-ttl" id="tbTtl">Dashboard</div><div class="tb-sub" id="tbSub" data-i="lbl_system_overview">Tổng quan toàn hệ thống</div></div>
@@ -925,8 +925,10 @@ function setLang(lang){
   document.querySelectorAll('.lang-btn').forEach(b=>{
     b.classList.toggle('on', b.textContent.trim()===(lang==='ko'?'한':lang.toUpperCase()));
   });
-  // Update all data-i elements
+  // Update all data-i elements — bỏ qua element do JS quản lý động
+  const JS_MANAGED = new Set(['cacheTxt','tsLbl','pgTitle','filterCount','tbRows']);
   document.querySelectorAll('[data-i]').forEach(el=>{
+    if(JS_MANAGED.has(el.id)) return; // JS tự cập nhật, không override
     const v=T(el.dataset.i);
     if(!v) return;
     if(el.tagName==='INPUT'||el.tagName==='TEXTAREA') el.placeholder=v;

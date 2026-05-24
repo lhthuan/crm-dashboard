@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="build-version" content="260522-0900">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ecom CRM Analytics</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -434,18 +435,18 @@ tr:hover td{background:#f8fffe}
     <div class="g2">
       <div class="card">
         <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--pu)"></div>Hành trình mua hàng — Phân bổ KH</div></div>
-        <div class="card-body"><div class="ch-wrap h320"><canvas id="chFunnelKH"></canvas></div></div>
+        <div class="card-body"><div class="ch-wrap h320" data-canvas-id="chFunnelKH"><canvas id="chFunnelKH"></canvas></div></div>
       </div>
       <div class="card">
         <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--gr)"></div>Đóng góp Doanh số theo nhóm</div></div>
-        <div class="card-body"><div class="ch-wrap h320"><canvas id="chFunnelRev"></canvas></div></div>
+        <div class="card-body"><div class="ch-wrap h320" data-canvas-id="chFunnelRev"><canvas id="chFunnelRev"></canvas></div></div>
       </div>
     </div>
     <div class="card">
       <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--or)"></div>Thời gian trung bình giữa các lần mua (ngày)</div>
         <span style="font-size:11px;color:var(--tx2)">Lần mua 1→2→3→4→5</span>
       </div>
-      <div class="card-body"><div class="ch-wrap h200"><canvas id="chFunnelGap"></canvas></div></div>
+      <div class="card-body"><div class="ch-wrap h200" data-canvas-id="chFunnelGap"><canvas id="chFunnelGap"></canvas></div></div>
     </div>
     <div class="card">
       <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--tl)"></div>Chi tiết theo nhóm mua hàng</div></div>
@@ -459,11 +460,11 @@ tr:hover td{background:#f8fffe}
     <div class="g2">
       <div class="card">
         <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--pu)"></div>CLV theo hạng thẻ</div></div>
-        <div class="card-body"><div class="ch-wrap h280"><canvas id="chClvTier"></canvas></div></div>
+        <div class="card-body"><div class="ch-wrap h280" data-canvas-id="chClvTier"><canvas id="chClvTier"></canvas></div></div>
       </div>
       <div class="card">
         <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--bl)"></div>Phân bổ CLV khách hàng</div></div>
-        <div class="card-body"><div class="ch-wrap h280"><canvas id="chClvDist"></canvas></div></div>
+        <div class="card-body"><div class="ch-wrap h280" data-canvas-id="chClvDist"><canvas id="chClvDist"></canvas></div></div>
       </div>
     </div>
     <div class="card">
@@ -491,11 +492,11 @@ tr:hover td{background:#f8fffe}
     <div class="g2">
       <div class="card">
         <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--rd)"></div>Phân bổ KH theo mức độ rủi ro</div></div>
-        <div class="card-body"><div class="ch-wrap h280"><canvas id="chAlertKH"></canvas></div></div>
+        <div class="card-body"><div class="ch-wrap h280" data-canvas-id="chAlertKH"><canvas id="chAlertKH"></canvas></div></div>
       </div>
       <div class="card">
         <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--or)"></div>Doanh số có nguy cơ mất theo nhóm</div></div>
-        <div class="card-body"><div class="ch-wrap h280"><canvas id="chAlertRev"></canvas></div></div>
+        <div class="card-body"><div class="ch-wrap h280" data-canvas-id="chAlertRev"><canvas id="chAlertRev"></canvas></div></div>
       </div>
     </div>
     <div class="card">
@@ -519,16 +520,16 @@ tr:hover td{background:#f8fffe}
     <div class="kpi-grid" id="yoyKpi"></div>
     <div class="card">
       <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--gr)"></div>Tăng trưởng Doanh số 2025 vs 2026 theo Chi nhánh</div></div>
-      <div class="card-body"><div class="ch-wrap h340"><canvas id="chYoyRev"></canvas></div></div>
+      <div class="card-body"><div class="ch-wrap h340" data-canvas-id="chYoyRev"><canvas id="chYoyRev"></canvas></div></div>
     </div>
     <div class="g2">
       <div class="card">
         <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--bl)"></div>Tăng trưởng % DS</div></div>
-        <div class="card-body"><div class="ch-wrap h320"><canvas id="chYoyGrowth"></canvas></div></div>
+        <div class="card-body"><div class="ch-wrap h320" data-canvas-id="chYoyGrowth"><canvas id="chYoyGrowth"></canvas></div></div>
       </div>
       <div class="card">
         <div class="card-head"><div class="card-ttl"><div class="dot" style="background:var(--or)"></div>Tăng trưởng % KH</div></div>
-        <div class="card-body"><div class="ch-wrap h320"><canvas id="chYoyKH"></canvas></div></div>
+        <div class="card-body"><div class="ch-wrap h320" data-canvas-id="chYoyKH"><canvas id="chYoyKH"></canvas></div></div>
       </div>
     </div>
     <div class="card">
@@ -1479,6 +1480,37 @@ function loading(msg='Đang tính số liệu...'){
     <div style="font-size:11px;color:var(--tx3);font-family:var(--mn)">Vui lòng chờ...</div>
   </div>`;
 }
+
+/** Hiện loading vào wrap của canvas, giữ data-canvas-id để restore được */
+function showLoading(canvasId, msg){
+  const el = G(canvasId);
+  const wrap = el ? el.parentElement : document.querySelector(`[data-canvas-id="${canvasId}"]`);
+  if(wrap){ wrap.innerHTML = loading(msg); wrap.dataset.canvasId = canvasId; }
+}
+
+/** Restore canvas vào wrap, trả về canvas element hoặc null */
+function restoreCanvas(canvasId){
+  const wrap = document.querySelector(`[data-canvas-id="${canvasId}"]`);
+  if(!wrap) return null;
+  // Nếu canvas đã có → dùng lại
+  let canvas = wrap.querySelector(`canvas#${canvasId}`);
+  if(!canvas){
+    canvas = document.createElement('canvas');
+    canvas.id = canvasId;
+    wrap.innerHTML='';
+    wrap.appendChild(canvas);
+  }
+  return canvas;
+}
+
+/** Tạo/restore chart an toàn — không bao giờ null */
+function safeChart(canvasId, config){
+  dc(canvasId); // destroy old chart
+  const canvas = restoreCanvas(canvasId);
+  if(!canvas){ DBG.err('safeChart: cannot find wrap for '+canvasId); return null; }
+  CH[canvasId] = new Chart(canvas, config);
+  return CH[canvasId];
+}
 function restoreCanvas(pgId){
   // Re-create canvas elements that were replaced by loading div
   document.querySelectorAll(`#${pgId} .ch-wrap`).forEach(wrap=>{
@@ -1516,9 +1548,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 // ══════════════════════════════════════════════════════════
 async function loadFunnel(){
   DBG.log('loadFunnel start');
-  ['chFunnelKH','chFunnelRev','chFunnelGap'].forEach(id=>{
-    const el=G(id); if(el) el.parentElement.innerHTML=loading('Đang tính funnel...');
-  });
+  ['chFunnelKH','chFunnelRev','chFunnelGap'].forEach(id=>showLoading(id,'Đang tính funnel...'));
   G('funnelTable').innerHTML=''; G('funnelKpi').innerHTML='';
   // allSettled — funnel/purchase chính, conversion phụ (nếu fail vẫn hiện được)
   const [purchR,convR] = await Promise.allSettled([
@@ -1550,10 +1580,7 @@ function renderFunnel(data, conv){
   const labels = data.map(d=>d.bucket?.replace(/^\d_/,'')||'');
 
   // Chart KH
-  const chKH=document.createElement('canvas'); chKH.id='chFunnelKH';
-  G('chFunnelKH')?.parentElement?.replaceChildren(chKH);
-  dc('chFunnelKH');
-  CH['chFunnelKH']=new Chart(G('chFunnelKH'),{type:'bar',data:{labels,datasets:[{
+  safeChart('chFunnelKH',{type:'bar',data:{labels,datasets:[{
     label:'Số KH',data:data.map(d=>d.customers),
     backgroundColor:colors,borderRadius:6,
   }]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
@@ -1568,20 +1595,14 @@ function renderFunnel(data, conv){
     scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'}}}}});
 
   // Chart Revenue
-  const chRev=document.createElement('canvas'); chRev.id='chFunnelRev';
-  G('chFunnelRev')?.parentElement?.replaceChildren(chRev);
-  dc('chFunnelRev');
-  CH['chFunnelRev']=new Chart(G('chFunnelRev'),{type:'doughnut',data:{
+  safeChart('chFunnelRev',{type:'doughnut',data:{
     labels,datasets:[{data:data.map(d=>+(d.total_revenue/1e9).toFixed(2)),backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'},
     tooltip:{callbacks:{label:ctx=>{const d=data[ctx.dataIndex];return`${ctx.label}: ${fv(d.total_revenue)} (${d.pct_revenue}%)`;}}}}}});
 
   // Chart Gap (days between purchases)
-  const chGap=document.createElement('canvas'); chGap.id='chFunnelGap';
-  G('chFunnelGap')?.parentElement?.replaceChildren(chGap);
-  dc('chFunnelGap');
   if(conv?.length){
-    CH['chFunnelGap']=new Chart(G('chFunnelGap'),{type:'bar',data:{
+    safeChart('chFunnelGap',{type:'bar',data:{
       labels:conv.map(d=>`Lần ${d.from_purchase}→${d.to_purchase}`),
       datasets:[
         {label:'Avg (ngày)',data:conv.map(d=>d.avg_days_between),backgroundColor:'rgba(37,99,235,.7)',borderRadius:5},
@@ -1614,7 +1635,7 @@ function renderFunnel(data, conv){
 async function loadCLV(){
   DBG.log('loadCLV start');
   G('clvKpi').innerHTML=''; G('clvSegTable').innerHTML=''; G('revCohortBody').innerHTML='';
-  ['chClvTier','chClvDist'].forEach(id=>{const el=G(id);if(el)el.parentElement.innerHTML=loading('Đang tính CLV...');});
+  ['chClvTier','chClvDist'].forEach(id=>showLoading(id,'Đang tính CLV...'));
   try{
     if(!DATA.clvSum)   DATA.clvSum  =await api('/api/v2/clv/summary',45000);
     if(!DATA.clvDist)  DATA.clvDist =await api('/api/v2/clv/distribution',25000);
@@ -1639,10 +1660,7 @@ function renderCLV(summary, dist, revCohort){
   ].map(([c,l,v,s])=>`<div class="kpi ${c}"><div class="kpi-lbl">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s}</div></div>`).join('');
 
   // Chart CLV by tier
-  const chT=document.createElement('canvas');chT.id='chClvTier';
-  G('chClvTier')?.parentElement?.replaceChildren(chT);
-  dc('chClvTier');
-  CH['chClvTier']=new Chart(G('chClvTier'),{type:'bar',data:{
+  safeChart('chClvTier',{type:'bar',data:{
     labels:summary.map(d=>d.tier),
     datasets:[
       {label:'Avg CLV',data:summary.map(d=>d.avg_clv),backgroundColor:summary.map(d=>TC[d.tier]||'#94a3b8'),borderRadius:6,yAxisID:'y'},
@@ -1658,10 +1676,7 @@ function renderCLV(summary, dist, revCohort){
     scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>fv(v)},grid:{color:'rgba(0,0,0,.04)'}}}}});
 
   // Chart CLV distribution
-  const chD=document.createElement('canvas');chD.id='chClvDist';
-  G('chClvDist')?.parentElement?.replaceChildren(chD);
-  dc('chClvDist');
-  CH['chClvDist']=new Chart(G('chClvDist'),{type:'bar',data:{
+  safeChart('chClvDist',{type:'bar',data:{
     labels:dist.map(d=>d.bucket.replace(/^\d_/,'')),
     datasets:[{label:'Số KH',data:dist.map(d=>d.customers),backgroundColor:'rgba(37,99,235,.7)',borderRadius:5}]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
@@ -1720,7 +1735,7 @@ let alertDetailData=[];
 async function loadNearChurn(){
   DBG.log('loadNearChurn start');
   G('alertKpi').innerHTML='';
-  ['chAlertKH','chAlertRev'].forEach(id=>{const el=G(id);if(el)el.parentElement.innerHTML=loading('Đang phân tích KH at-risk...');});
+  ['chAlertKH','chAlertRev'].forEach(id=>showLoading(id,'Đang phân tích KH at-risk...'));
   try{
     if(!DATA.nearChurn) DATA.nearChurn=await api('/api/v2/alert/near-churn',50000);
     renderNearChurn(DATA.nearChurn);
@@ -1755,12 +1770,7 @@ function renderNearChurn(data){
   const labels=data.map(d=>d.risk_level);
 
   // Pie chart - KH by risk
-  const chAK=document.createElement('canvas');
-  chAK.id='chAlertKH';
-  const wrapKH=G('chAlertKH');
-  if(wrapKH&&wrapKH.parentElement) wrapKH.parentElement.replaceChildren(chAK);
-  dc('chAlertKH');
-  CH['chAlertKH']=new Chart(G('chAlertKH'),{
+  safeChart('chAlertKH',{
     type:'doughnut',
     data:{
       labels:labels,
@@ -1779,12 +1789,7 @@ function renderNearChurn(data){
   });
 
   // Bar chart - revenue at risk
-  const chAR=document.createElement('canvas');
-  chAR.id='chAlertRev';
-  const wrapRev=G('chAlertRev');
-  if(wrapRev&&wrapRev.parentElement) wrapRev.parentElement.replaceChildren(chAR);
-  dc('chAlertRev');
-  CH['chAlertRev']=new Chart(G('chAlertRev'),{
+  safeChart('chAlertRev',{
     type:'bar',
     data:{
       labels:labels,
@@ -1865,9 +1870,7 @@ async function loadYoY(){
   DBG.log('loadYoY start');
   G('yoyKpi').innerHTML='';
   G('yoyTable').innerHTML='';
-  ['chYoyRev','chYoyGrowth','chYoyKH'].forEach(function(id){
-    var el=G(id); if(el) el.parentElement.innerHTML=loading('Đang tính YoY...');
-  });
+  ['chYoyRev','chYoyGrowth','chYoyKH'].forEach(id=>showLoading(id,'Đang tính YoY...'));
   try{
     if(!DATA.yoy) DATA.yoy=await api('/api/v2/branches/yoy?top_n=20',30000);
     renderYoY(DATA.yoy);
@@ -1893,10 +1896,7 @@ function renderYoY(data){
   function growthColor(v){return v==null?'#94a3b8':v>20?'#16a34a':v>0?'#4ade80':v>-10?'#f87171':'#dc2626';}
 
   // Revenue comparison
-  var chYR=document.createElement('canvas'); chYR.id='chYoyRev';
-  var wYR=G('chYoyRev'); if(wYR&&wYR.parentElement) wYR.parentElement.replaceChildren(chYR);
-  dc('chYoyRev');
-  CH['chYoyRev']=new Chart(G('chYoyRev'),{
+  safeChart('chYoyRev',{
     type:'bar',
     data:{labels:labels,datasets:[
       {label:'2025',data:data.map(function(d){return +(d.rev_2025/1e9).toFixed(2);}),backgroundColor:'rgba(37,99,235,.6)',borderRadius:4},
@@ -1914,10 +1914,7 @@ function renderYoY(data){
   });
 
   // Growth % DS
-  var chYG=document.createElement('canvas'); chYG.id='chYoyGrowth';
-  var wYG=G('chYoyGrowth'); if(wYG&&wYG.parentElement) wYG.parentElement.replaceChildren(chYG);
-  dc('chYoyGrowth');
-  CH['chYoyGrowth']=new Chart(G('chYoyGrowth'),{
+  safeChart('chYoyGrowth',{
     type:'bar',
     data:{labels:labels,datasets:[{
       label:'Tăng trưởng DS %',
@@ -1936,10 +1933,7 @@ function renderYoY(data){
   });
 
   // Growth % KH
-  var chYK=document.createElement('canvas'); chYK.id='chYoyKH';
-  var wYK=G('chYoyKH'); if(wYK&&wYK.parentElement) wYK.parentElement.replaceChildren(chYK);
-  dc('chYoyKH');
-  CH['chYoyKH']=new Chart(G('chYoyKH'),{
+  safeChart('chYoyKH',{
     type:'bar',
     data:{labels:labels,datasets:[{
       label:'Tăng trưởng KH %',

@@ -944,8 +944,7 @@ function setLang(lang){
     if(sub&&sub.dataset.i) sub.textContent=T(sub.dataset.i);
   }
   // Update cache bar text
-  const cacheBar=G('cacheTxt');
-  if(cacheBar&&CACHE_READY_FLAG) cacheBar.textContent=T('lbl_cache_ready');
+  // cache bar được cập nhật bởi pollCache(), không cần update ở đây
 }
 
 function showOv(t){ G('cacheTxt').textContent='⏳ '+t; }
